@@ -4,16 +4,47 @@ import { Niche, GenerationConfig, AssetUploads } from '../types';
 
 export class GeminiService {
   /**
-   * Instancia o cliente da IA usando a chave de ambiente.
-   * A API_KEY deve estar disponível em process.env.API_KEY.
+   * Obtém a chave de forma segura. 
+   * No Netlify, as variáveis precisam ser coladas nos campos 'Production', 'Deploy Previews' e 'Branch Deploys'.
    */
-  private static get client() {
-    return new GoogleGenAI({ apiKey: process.env.API_KEY });
+  private static getApiKey(): string {
+    let key: any;
+    
+    try {
+      // Tenta ler do process.env (padrão solicitado e injetado pelo Netlify/Vite)
+      key = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : undefined;
+    } catch (e) {
+      key = undefined;
+    }
+
+    // Limpeza de segurança (remove espaços que podem vir ao colar)
+    if (typeof key === 'string') {
+      key = key.trim();
+    }
+
+    // Validação rigorosa
+    if (!key || key === 'undefined' || key === 'null' || key === '') {
+      throw new Error(
+        "🚨 CONFIGURAÇÃO PENDENTE: Sua API_KEY não foi detectada.\n\n" +
+        "Como as caixas no Netlify são digitáveis, siga este ajuste:\n" +
+        "1. No painel de Variáveis do Netlify, clique em 'Options' > 'Edit' na API_KEY.\n" +
+        "2. COPIE e COLE sua chave (AIzaSy...) nos 3 campos de texto:\n" +
+        "   - Production\n" +
+        "   - Deploy previews (Importante para links de teste!)\n" +
+        "   - Branch deploys\n" +
+        "3. Clique em SAVE.\n" +
+        "4. Vá em 'Deploys' > 'Trigger deploy' > 'Clear cache and deploy site'."
+      );
+    }
+
+    return key;
   }
 
   static async generateCaption(niche: Niche, config: GenerationConfig): Promise<string> {
     try {
-      const response = await this.client.models.generateContent({
+      const ai = new GoogleGenAI({ apiKey: this.getApiKey() });
+      
+      const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: `
           Você é um especialista em Social Media Marketing e Copywriting para Instagram.
@@ -32,6 +63,7 @@ export class GeminiService {
       return response.text || '';
     } catch (error: any) {
       console.error("Erro ao gerar legenda:", error);
+      if (error.message.includes("CONFIGURAÇÃO PENDENTE")) throw error;
       return "Confira nossa novidade incrível! 🚀 #marketing #estilo";
     }
   }
@@ -42,6 +74,9 @@ export class GeminiService {
     config: GenerationConfig,
     onProgress: (msg: string) => void
   ): Promise<string> {
+    const apiKey = this.getApiKey();
+    const ai = new GoogleGenAI({ apiKey });
+
     onProgress("Sincronizando diretrizes criativas...");
     await new Promise(r => setTimeout(r, 600));
     
@@ -103,7 +138,7 @@ export class GeminiService {
     onProgress("Renderizando pixels publicitários...");
 
     try {
-      const response = await this.client.models.generateContent({
+      const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
         contents: { parts },
         config: {
