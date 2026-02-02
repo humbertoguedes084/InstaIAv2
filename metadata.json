@@ -1,0 +1,7 @@
+{
+  "name": "Insta.IA Marketing Pro",
+  "description": "Revolutionary SaaS platform that transforms amateur product photos into professional Instagram ads using specialized Gemini AI.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
