@@ -1,7 +1,7 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  Sparkles, Download, Trash2, Key, Info, ExternalLink, RefreshCw, Globe, Link as LinkIcon, AlertTriangle
+  Sparkles, Download, Trash2, Key, Info, ExternalLink, RefreshCw, Globe, Link as LinkIcon, ShieldCheck
 } from 'lucide-react';
 import { NICHES } from '../constants';
 import { Niche, AssetUploads, GenerationConfig, GeneratedImage, UserUsage } from '../types';
@@ -48,27 +48,28 @@ const Generator: React.FC<GeneratorProps> = ({ onSuccess, usage, onDeleteImage, 
   const hasEnoughCredits = availableCredits > 0;
 
   useEffect(() => {
-    const checkKey = async () => {
-      // Se estamos no Netlify, process.env.API_KEY pode ser undefined
-      // Se window.aistudio existe, checamos se o usuário já selecionou uma chave
-      if (window.aistudio) {
-        const hasKey = await window.aistudio.hasSelectedApiKey();
-        if (!hasKey && !process.env.API_KEY) setNeedsKeySelection(true);
-      } else if (!process.env.API_KEY) {
-        // Se não tem chave e não estamos em ambiente com aistudio, também precisamos de ação
-        setNeedsKeySelection(true);
+    const checkKeyStatus = async () => {
+      // Se não houver chave no ambiente (comum em Vercel sem build-injection)
+      if (!process.env.API_KEY) {
+        if (window.aistudio) {
+          const hasKey = await window.aistudio.hasSelectedApiKey();
+          if (!hasKey) setNeedsKeySelection(true);
+        } else {
+          // Se não há variável e nem objeto aistudio, precisamos alertar
+          setNeedsKeySelection(true);
+        }
       }
     };
-    checkKey();
+    checkKeyStatus();
   }, []);
 
-  const handleOpenKeySelector = async () => {
+  const handleActivateEngine = async () => {
     if (window.aistudio) {
       await window.aistudio.openSelectKey();
+      // Conforme diretrizes: Assumir sucesso e prosseguir para evitar race condition
       setNeedsKeySelection(false);
     } else {
-      // Caso fora do AI Studio, mostramos as instruções do Netlify
-      alert("Para rodar no Netlify:\n1. Vá em Site Settings > Environment variables\n2. Adicione API_KEY com sua chave do Google\n3. Faça um novo deploy!");
+      alert("Aviso de Sistema: A chave de API não foi injetada pelo servidor. Configure a variável 'API_KEY' no painel de controle do seu projeto.");
     }
   };
 
@@ -95,11 +96,11 @@ const Generator: React.FC<GeneratorProps> = ({ onSuccess, usage, onDeleteImage, 
         config: { ...config, nicheId: selectedNiche.id }
       });
     } catch (error: any) {
-      console.error("Erro na geração:", error);
+      console.error("Geração falhou:", error);
       if (error.message === "KEY_MISSING" || error.message === "KEY_INVALID") {
         setNeedsKeySelection(true);
       } else {
-        alert(`Erro: ${error.message}`);
+        alert(`Ocorreu um erro no processamento: ${error.message}`);
       }
     } finally {
       setIsGenerating(false);
@@ -108,39 +109,43 @@ const Generator: React.FC<GeneratorProps> = ({ onSuccess, usage, onDeleteImage, 
 
   if (needsKeySelection && !isGenerating) {
     return (
-      <div className="p-6 md:p-12 max-w-2xl mx-auto space-y-8 animate-in zoom-in-95 duration-500">
-        <div className="bg-white border-2 border-gray-100 p-8 md:p-12 rounded-[3rem] text-center space-y-8 shadow-2xl">
-          <div className="w-20 h-20 bg-indigo-50 rounded-3xl flex items-center justify-center mx-auto text-indigo-600 shadow-lg">
-            <Key size={40} />
+      <div className="p-6 md:p-12 max-w-xl mx-auto animate-in zoom-in-95 duration-500">
+        <div className="bg-white border-2 border-indigo-50 p-10 md:p-14 rounded-[3.5rem] text-center space-y-10 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-6 opacity-5">
+            <Sparkles size={120} />
           </div>
-          <div className="space-y-4">
-            <h2 className="text-3xl font-black uppercase tracking-tighter text-gray-900 italic">Conectar Inteligência</h2>
-            <p className="text-sm text-gray-500 font-bold leading-relaxed max-w-sm mx-auto">
-              {window.aistudio 
-                ? "Clique abaixo para ativar o motor de IA usando sua chave do Google."
-                : "A chave de API não foi detectada no servidor (Netlify). Verifique suas variáveis de ambiente ou tente ativar manualmente."}
-            </p>
+          
+          <div className="w-24 h-24 bg-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto text-white shadow-xl shadow-indigo-100 rotate-3">
+            <Key size={48} />
           </div>
           
           <div className="space-y-4">
-            <button onClick={handleOpenKeySelector} className="w-full py-6 bg-gray-950 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl active:scale-95">
-              {window.aistudio ? "Ativar Motor de IA" : "Ver Instruções de Configuração"}
+            <h2 className="text-3xl font-black uppercase tracking-tighter text-gray-900 italic">Ativar Estúdio IA</h2>
+            <p className="text-sm text-gray-500 font-bold leading-relaxed max-w-xs mx-auto">
+              Para começar a renderizar suas campanhas, é necessário conectar o motor de inteligência artificial.
+            </p>
+          </div>
+          
+          <div className="space-y-4 relative z-10">
+            <button 
+              onClick={handleActivateEngine} 
+              className="w-full py-6 bg-gray-950 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-3"
+            >
+              <ShieldCheck size={20} className="text-indigo-400" /> Ativar Agora
             </button>
-            <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" className="inline-flex items-center gap-2 text-[10px] font-black text-indigo-500 uppercase tracking-widest hover:underline">
-              Obter minha chave gratuita <ExternalLink size={12} />
+            <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" className="inline-flex items-center gap-2 text-[10px] font-black text-indigo-500 uppercase tracking-widest hover:underline opacity-60">
+              Gerenciar chaves na Google Cloud <ExternalLink size={12} />
             </a>
           </div>
 
-          {!window.aistudio && (
-            <div className="pt-6 border-t mt-8 flex items-start gap-4 text-left">
-              <div className="p-2 bg-amber-50 text-amber-600 rounded-lg shrink-0">
-                <AlertTriangle size={16} />
-              </div>
-              <p className="text-[10px] text-gray-400 font-medium">
-                Dica: No Netlify, as variáveis de ambiente precisam ser configuradas no painel e o site precisa de um "Redeploy" para que elas funcionem.
-              </p>
+          <div className="pt-8 border-t border-gray-100 flex items-start gap-4 text-left">
+            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg shrink-0">
+              <Info size={16} />
             </div>
-          )}
+            <p className="text-[10px] text-gray-400 font-medium leading-normal">
+              Se você é o administrador, certifique-se de que a variável <strong>API_KEY</strong> está configurada nas variáveis de ambiente do seu projeto.
+            </p>
+          </div>
         </div>
       </div>
     );

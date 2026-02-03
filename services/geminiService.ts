@@ -4,8 +4,7 @@ import { Niche, GenerationConfig, AssetUploads } from '../types';
 
 export class GeminiService {
   /**
-   * Tenta capturar a chave. No Netlify, se não estiver prefixada ou injetada no build,
-   * retornará undefined, o que disparará a tela de seleção de chave no Generator.tsx.
+   * Captura a chave de API. Prioriza process.env.API_KEY injetado pelo ambiente.
    */
   private static getApiKey(): string | undefined {
     return process.env.API_KEY;
@@ -20,9 +19,10 @@ export class GeminiService {
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: `
-          Você é um especialista em marketing para o nicho de ${niche.name}.
-          Crie uma legenda estratégica para o Instagram sobre: ${config.text || niche.description}.
-          Inclua: Gatilhos mentais, Emojis e Hashtags.
+          Persona: Especialista em Marketing Digital.
+          Nicho: ${niche.name}.
+          Contexto: ${config.text || niche.description}.
+          Tarefa: Criar legenda persuasiva para Instagram com Emojis, Hashtags e CTA.
           Idioma: Português do Brasil.
         `.trim(),
         config: {
@@ -36,8 +36,8 @@ export class GeminiService {
         sources 
       };
     } catch (error: any) {
-      console.error("Erro na legenda:", error);
-      if (error.message?.includes("API key") || error.message?.includes("not found")) throw new Error("KEY_INVALID");
+      console.error("Caption Error:", error);
+      if (error.message?.includes("404") || error.message?.includes("not found")) throw new Error("KEY_INVALID");
       throw error;
     }
   }
@@ -52,18 +52,17 @@ export class GeminiService {
     if (!apiKey) throw new Error("KEY_MISSING");
 
     const ai = new GoogleGenAI({ apiKey });
-    onProgress("Configurando iluminação e contexto...");
+    onProgress("Calibrando IA Generativa...");
     
-    // Modelos oficiais conforme diretrizes
+    // Modelos oficiais: gemini-2.5-flash-image (rápido) ou gemini-3-pro-image-preview (ultra)
     const modelName = config.quality === 'STANDARD' ? 'gemini-2.5-flash-image' : 'gemini-3-pro-image-preview';
     
     const prompt = `
-      High-end professional Instagram advertisement for ${niche.name}.
-      Description: ${config.text || 'premium product lifestyle'}.
+      Professional studio photography for ${niche.name} brand.
+      Scene: ${config.text || 'premium advertising background'}.
       Atmosphere: ${niche.context.atmosphere}.
       Lighting: ${niche.context.lighting}.
-      Colors: ${niche.context.colors}.
-      Cinematic, 8k, commercial photography style.
+      Style: High-end commercial, crisp details, 8k resolution.
     `.trim();
 
     const parts: any[] = [{ text: prompt }];
@@ -77,7 +76,7 @@ export class GeminiService {
       });
     }
 
-    onProgress("Renderizando arte final...");
+    onProgress("Renderizando pixels de alta fidelidade...");
 
     try {
       const response = await ai.models.generateContent({
@@ -97,10 +96,10 @@ export class GeminiService {
           }
         }
       }
-      throw new Error("A IA não gerou uma imagem. Tente mudar o texto.");
+      throw new Error("Falha na renderização da imagem.");
     } catch (error: any) {
-      console.error("Erro na imagem:", error);
-      if (error.message?.includes("API key") || error.message?.includes("not found")) throw new Error("KEY_INVALID");
+      console.error("Image Gen Error:", error);
+      if (error.message?.includes("404") || error.message?.includes("not found")) throw new Error("KEY_INVALID");
       throw error;
     }
   }
