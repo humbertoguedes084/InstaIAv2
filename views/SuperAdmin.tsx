@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Users, ShieldCheck, Search, CheckCircle, Zap, Trash2, LayoutGrid, CreditCard, Save } from 'lucide-react';
+import { Users, ShieldCheck, Search, CheckCircle, Zap, Trash2, LayoutGrid, CreditCard, Save, RefreshCcw } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const SuperAdmin: React.FC = () => {
@@ -16,6 +16,7 @@ const SuperAdmin: React.FC = () => {
   }, []);
 
   const fetchData = async () => {
+    setLoading(true);
     const { data: usersData } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
     const { count: imagesCount } = await supabase.from('generated_images').select('*', { count: 'exact', head: true });
     
@@ -42,15 +43,19 @@ const SuperAdmin: React.FC = () => {
       .update(updateData)
       .eq('id', id);
 
-    if (error) alert("Erro ao atualizar: " + error.message);
+    if (error) {
+      alert("Erro ao atualizar: " + error.message);
+    } else {
+      // Atualizar estado local após sucesso
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updateData } : u));
+    }
     setSavingId(null);
-    fetchData();
   };
 
   const deleteUser = async (id: string) => {
-    if (!window.confirm("Remover usuário permanentemente?")) return;
-    await supabase.from('profiles').delete().eq('id', id);
-    fetchData();
+    if (!window.confirm("Remover usuário permanentemente? Isso apagará todas as fotos dele.")) return;
+    const { error } = await supabase.from('profiles').delete().eq('id', id);
+    if (!error) fetchData();
   };
 
   const filteredUsers = users.filter(u => 
@@ -66,27 +71,33 @@ const SuperAdmin: React.FC = () => {
             <ShieldCheck size={32} />
           </div>
           <div>
-            <h1 className="text-3xl font-black uppercase tracking-tighter">Torre de Comando</h1>
-            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mt-1">Marketing Engine Control</p>
+            <h1 className="text-3xl font-black uppercase tracking-tighter italic">Torre de Comando</h1>
+            <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mt-1">Marketing Engine Control • Super Admin</p>
           </div>
         </div>
         <div className="flex gap-4">
-           <button onClick={fetchData} className="px-6 py-3 bg-gray-900 rounded-xl font-bold text-xs uppercase tracking-widest border border-gray-800 hover:border-indigo-600 transition-all">Sincronizar</button>
+           <button 
+            onClick={fetchData} 
+            disabled={loading}
+            className="px-6 py-3 bg-gray-900 rounded-xl font-bold text-xs uppercase tracking-widest border border-gray-800 hover:border-indigo-600 transition-all flex items-center gap-2"
+           >
+             <RefreshCcw size={14} className={loading ? "animate-spin" : ""} /> Sincronizar Dados
+           </button>
         </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-gray-900 p-8 rounded-[2rem] border border-gray-800 flex items-center gap-6 shadow-xl">
            <div className="w-12 h-12 bg-indigo-500/10 text-indigo-400 rounded-xl flex items-center justify-center"><Users size={24} /></div>
-           <div><p className="text-[10px] text-gray-500 font-black uppercase">Usuários Totais</p><p className="text-3xl font-black italic tracking-tighter">{users.length}</p></div>
+           <div><p className="text-[10px] text-gray-500 font-black uppercase">Usuários</p><p className="text-3xl font-black italic tracking-tighter">{users.length}</p></div>
         </div>
         <div className="bg-gray-900 p-8 rounded-[2rem] border border-gray-800 flex items-center gap-6 shadow-xl">
            <div className="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-xl flex items-center justify-center"><LayoutGrid size={24} /></div>
-           <div><p className="text-[10px] text-gray-500 font-black uppercase">Artes Geradas</p><p className="text-3xl font-black italic tracking-tighter">{stats.totalImages}</p></div>
+           <div><p className="text-[10px] text-gray-500 font-black uppercase">Renderizações</p><p className="text-3xl font-black italic tracking-tighter">{stats.totalImages}</p></div>
         </div>
         <div className="bg-gray-900 p-8 rounded-[2rem] border border-gray-800 flex items-center gap-6 shadow-xl">
            <div className="w-12 h-12 bg-amber-500/10 text-amber-400 rounded-xl flex items-center justify-center"><CreditCard size={24} /></div>
-           <div><p className="text-[10px] text-gray-500 font-black uppercase">Pendentes</p><p className="text-3xl font-black italic tracking-tighter">{stats.pendingUsers}</p></div>
+           <div><p className="text-[10px] text-gray-500 font-black uppercase">Aprovação Pendente</p><p className="text-3xl font-black italic tracking-tighter">{stats.pendingUsers}</p></div>
         </div>
       </div>
 
@@ -94,7 +105,7 @@ const SuperAdmin: React.FC = () => {
         <Search size={20} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600" />
         <input 
           type="text" 
-          placeholder="Buscar por e-mail ou nome..."
+          placeholder="Filtrar por nome ou e-mail..."
           className="w-full bg-gray-900 border border-gray-800 rounded-2xl pl-14 pr-6 py-5 font-bold outline-none focus:border-indigo-600 transition-all shadow-inner"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -103,13 +114,13 @@ const SuperAdmin: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredUsers.map((u) => (
-          <div key={u.id} className={`bg-gray-900 border p-8 rounded-[2.5rem] space-y-6 relative group transition-all hover:shadow-2xl hover:border-gray-700 ${u.status === 'WAITING_HOTMART' ? 'border-amber-500/30' : 'border-gray-800'}`}>
+          <div key={u.id} className={`bg-gray-900 border p-8 rounded-[2.5rem] space-y-6 relative group transition-all hover:shadow-2xl hover:border-gray-700 ${u.status === 'WAITING_HOTMART' ? 'border-amber-500/30 ring-1 ring-amber-500/10' : 'border-gray-800'}`}>
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-gray-800 flex items-center justify-center text-xl font-black text-indigo-400 shadow-inner">
                 {u.name?.charAt(0) || 'U'}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-black text-lg tracking-tighter uppercase truncate">{u.name || 'Usuário'}</p>
+                <p className="font-black text-lg tracking-tighter uppercase truncate italic">{u.name || 'Sem Nome'}</p>
                 <p className="text-[10px] text-gray-500 font-bold uppercase truncate">{u.email}</p>
               </div>
               <div className={`w-3 h-3 rounded-full ${u.status === 'ACTIVE' ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`} />
@@ -118,7 +129,7 @@ const SuperAdmin: React.FC = () => {
             <div className="pt-6 border-t border-gray-800 space-y-4">
               <div className="flex items-center justify-between text-[10px] font-black uppercase text-gray-500 tracking-widest">
                  <span>Gestão de Créditos</span>
-                 <span>Atual: {u.credits_weekly}</span>
+                 <span className="text-indigo-400">Total: {u.credits_weekly}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
@@ -126,7 +137,7 @@ const SuperAdmin: React.FC = () => {
                   <input 
                     type="number" 
                     className="w-full bg-gray-950 border border-gray-800 rounded-xl pl-9 py-3 text-sm font-black focus:border-indigo-600 outline-none"
-                    placeholder="Novo saldo..."
+                    placeholder="Alterar créditos..."
                     value={editingCredits[u.id] !== undefined ? editingCredits[u.id] : u.credits_weekly}
                     onChange={(e) => setEditingCredits({ ...editingCredits, [u.id]: parseInt(e.target.value) || 0 })}
                   />
@@ -134,27 +145,28 @@ const SuperAdmin: React.FC = () => {
                 <button 
                   onClick={() => updateCredits(u.id, u.status)}
                   disabled={savingId === u.id}
-                  className={`p-3 rounded-xl transition-all ${savingId === u.id ? 'bg-gray-800 text-gray-500 cursor-wait' : 'bg-indigo-600 text-white hover:bg-emerald-500'}`}
+                  className={`p-3 rounded-xl transition-all ${savingId === u.id ? 'bg-gray-800 text-gray-500 cursor-wait' : 'bg-indigo-600 text-white hover:bg-emerald-500 shadow-lg shadow-indigo-600/20'}`}
+                  title="Salvar alterações"
                 >
                   <Save size={20} />
                 </button>
               </div>
               
-              <div className="flex gap-2">
+              <div className="flex gap-2 pt-2">
                 <button 
                   onClick={() => deleteUser(u.id)}
                   className="w-full py-3 bg-red-500/10 text-red-500 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2"
                 >
-                  <Trash2 size={12} /> Remover Acesso
+                  <Trash2 size={12} /> Banir Usuário
                 </button>
               </div>
             </div>
           </div>
         ))}
         {filteredUsers.length === 0 && (
-          <div className="col-span-full py-20 text-center bg-gray-900/50 rounded-[3rem] border-2 border-dashed border-gray-800">
+          <div className="col-span-full py-20 text-center bg-gray-900/30 rounded-[3rem] border-2 border-dashed border-gray-800">
              <Search size={40} className="mx-auto text-gray-700 mb-4" />
-             <p className="text-gray-500 font-black uppercase tracking-widest text-xs">Nenhum usuário encontrado na busca.</p>
+             <p className="text-gray-500 font-black uppercase tracking-widest text-xs italic">A torre não detectou este usuário.</p>
           </div>
         )}
       </div>

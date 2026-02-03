@@ -9,34 +9,21 @@ export class GeminiService {
 
   static parseError(error: any): string {
     const msg = error?.message?.toLowerCase() || "";
-    const stack = error?.stack?.toLowerCase() || "";
     
-    // Erros de Segurança / Moderação
     if (msg.includes("safety") || msg.includes("candidate was blocked") || msg.includes("finish_reason: 3")) {
-      return "CONTEÚDO BLOQUEADO: Sua descrição ou imagem acionou os filtros de moderação da IA. Tente remover palavras que possam ser interpretadas como agressivas, sensuais ou proibidas. Use uma linguagem mais profissional e neutra.";
+      return "CONTEÚDO BLOQUEADO: Sua descrição ou imagem acionou os filtros de moderação da IA. Tente remover palavras que possam ser interpretadas como agressivas ou proibidas. Use uma linguagem mais neutra.";
     }
-    
-    // Erros de Limite / Quota
     if (msg.includes("quota") || msg.includes("exhausted") || msg.includes("429") || msg.includes("limit reached")) {
-      return "LIMITE ATINGIDO: O motor de inteligência artificial recebeu muitas requisições simultâneas. Aguarde 30 a 60 segundos antes de tentar novamente para que o sistema se estabilize.";
+      return "LIMITE ATINGIDO: O motor de IA recebeu muitas requisições simultâneas. Aguarde 30 segundos e tente novamente.";
     }
-    
-    // Erros de Configuração / Chave
     if (msg.includes("api key") || msg.includes("invalid api key") || msg.includes("not found")) {
-      return "ERRO DE CONEXÃO: Sua chave de acesso à IA expirou ou é inválida. Clique no botão 'Recarregar Conexão' ou verifique se sua conta no Google AI Studio está ativa.";
+      return "ERRO DE CONEXÃO: Sua chave de acesso à IA expirou ou é inválida. Clique em 'Ativar Agora' ou verifique sua conta.";
+    }
+    if (msg.includes("inline data") || msg.includes("mime type")) {
+      return "FALHA NO ARQUIVO: Formato de imagem não suportado. Tente JPG/PNG padrão.";
     }
     
-    // Erros de Dados da Imagem
-    if (msg.includes("inline data") || msg.includes("mime type") || msg.includes("base64")) {
-      return "FALHA NO ARQUIVO: O formato da imagem enviada não é compatível ou o arquivo está corrompido. Tente usar imagens JPG/PNG com menos de 4MB.";
-    }
-    
-    // Erros de Prompt / Instrução
-    if (msg.includes("prompt") || msg.includes("invalid argument")) {
-      return "ERRO DE ROTEIRO: A descrição fornecida é confusa para a IA. Tente ser mais específico sobre o cenário, luz e posição do produto.";
-    }
-    
-    return `FALHA TÉCNICA: O motor de renderização encontrou um problema inesperado (${msg}). Tente simplificar sua descrição ou usar uma foto diferente.`;
+    return `FALHA TÉCNICA: O motor encontrou um problema inesperado (${msg}). Tente simplificar sua descrição ou usar outra foto.`;
   }
 
   static async generateSmartCaption(niche: Niche, config: GenerationConfig): Promise<{text: string, sources: any[]}> {
@@ -48,33 +35,26 @@ export class GeminiService {
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: `
-          Persona: Diretor de Redação de uma Agência de Publicidade Global.
+          Persona: Diretor de Redação (Copywriter) Sênior de uma Agência de Publicidade em Nova York.
           Nicho: ${niche.name}.
           Contexto do Produto: ${config.text || niche.description}.
-          Preço Estratégico: ${config.price || 'Sob consulta'}.
+          Preço: ${config.price || 'Sob consulta'}.
           
-          Tarefa: Criar uma legenda persuasiva de alta conversão para Instagram.
-          Estrutura Obrigatória:
-          1. Gancho (Hook) impactante.
-          2. Desenvolvimento com gatilhos mentais.
-          3. CTA (Chamada para Ação).
-          4. Mix de hashtags.
+          Tarefa: Criar uma legenda magnética de alta conversão.
+          Estrutura: 
+          1. Gancho irresistível.
+          2. Benefícios emocionais.
+          3. Chamada para ação (CTA) direta.
+          4. Hashtags estratégicas.
           
-          Tom de Voz: Sofisticado e magnético.
-          Idioma: Português do Brasil.
+          Tom: Sofisticado, minimalista e profissional.
         `.trim(),
-        config: {
-          tools: [{ googleSearch: {} }]
-        }
+        config: { tools: [{ googleSearch: {} }] }
       });
 
       const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-      return { 
-        text: response.text || '', 
-        sources 
-      };
+      return { text: response.text || '', sources };
     } catch (error: any) {
-      console.error("Caption Error:", error);
       throw new Error(this.parseError(error));
     }
   }
@@ -89,83 +69,64 @@ export class GeminiService {
     if (!apiKey) throw new Error("KEY_MISSING");
 
     const ai = new GoogleGenAI({ apiKey });
-    onProgress("Direção de arte em curso...");
+    onProgress("Direção de Arte: Agência de Marketing Global...");
     
-    const modelName = 'gemini-2.5-flash-image';
-    
+    // Instruções rígidas de qualidade de agência
     const agencyStandardPrompt = `
-      [AGENCY STANDARD DIRECTIVE]
-      Style: High-end luxury advertisement, high production value, commercial studio photography.
-      Technical: 8k, sharp, professional color grading, magazine quality.
+      [AGENCY MASTER DIRECTIVE]
+      You are a World-Class Creative Director and Commercial Product Photographer.
+      Quality Requirement: Absolute masterpiece, magazine-ready, cinematic, hyper-realistic.
+      Visual Style: High-end luxury advertisement, ultra-premium commercial aesthetics.
+      Technical Specs: 8k resolution, razor-sharp textures, master-level professional color grading.
       
       [SCENE SETUP]
-      Niche: ${niche.name}.
-      Creative Concept: ${config.text || 'Premium presentation of ' + niche.name}.
-      Lighting Strategy: ${niche.context.lighting}.
-      Atmosphere: ${niche.context.atmosphere}.
-      Color Palette: ${niche.context.colors}.
-      Composition: ${niche.context.composition}.
+      Niche Category: ${niche.name}.
+      Concept: ${config.text || 'High-end presentation of ' + niche.name}.
+      Lighting: ${niche.context.lighting}. Focus on studio light architecture (Key, Fill, Rim lights).
+      Environment: ${niche.context.atmosphere}. Clean, elegant, upscale.
+      Palette: ${niche.context.colors}.
+      Composition: ${niche.context.composition}. Center the product as a hero.
       
-      [BRAND INTEGRATION]
-      ${assets.brandLogo ? "Masterfully integrate the uploaded logo as a physical brand element." : ""}
-      ${assets.styleReference ? "Strictly replicate the artistic mood and lighting from the reference image." : ""}
-      ${config.price ? `Subtle high-end price hint of ${config.price}.` : ""}
+      [STYLE FIDELITY - CRITICAL]
+      ${assets.styleReference ? `STRICT STYLE REQUIREMENT: Use the provided style reference image as the primary template. You MUST replicate its lighting temperature, color saturation levels, artistic mood, and overall visual DNA perfectly. The final result must look like it belongs to the same collection as the reference.` : ""}
       
-      Final Quality: Photorealistic masterpiece.
+      [PRODUCT & BRAND]
+      ${assets.productPhoto ? "Integrate the main product from the uploaded image seamlessly into this premium environment. Maintain its proportions while enhancing shadows and reflections to match the new professional lighting." : ""}
+      ${assets.brandLogo ? "Subtly and elegantly integrate the uploaded brand logo as a realistic physical element (printed on packaging, etched on surface, or as a high-end subtle overlay)." : ""}
+      ${config.price ? `Subtle high-end value hint: ${config.price}.` : ""}
+      
+      Final Finish: No artifacts, professional lens bokeh, commercial studio perfection.
     `.trim();
 
     const parts: any[] = [{ text: agencyStandardPrompt }];
 
+    // Anexar imagens respeitando a ordem de importância para o modelo
     if (assets.productPhoto) {
-      parts.push({
-        inlineData: {
-          data: assets.productPhoto.split(',')[1],
-          mimeType: 'image/jpeg'
-        }
-      });
+      parts.push({ inlineData: { data: assets.productPhoto.split(',')[1], mimeType: 'image/jpeg' } });
     }
-
-    if (assets.brandLogo) {
-      parts.push({
-        inlineData: {
-          data: assets.brandLogo.split(',')[1],
-          mimeType: 'image/jpeg'
-        }
-      });
-    }
-
     if (assets.styleReference) {
-      parts.push({
-        inlineData: {
-          data: assets.styleReference.split(',')[1],
-          mimeType: 'image/jpeg'
-        }
-      });
+      parts.push({ inlineData: { data: assets.styleReference.split(',')[1], mimeType: 'image/jpeg' } });
+    }
+    if (assets.brandLogo) {
+      parts.push({ inlineData: { data: assets.brandLogo.split(',')[1], mimeType: 'image/jpeg' } });
     }
 
-    onProgress("Finalizando renderização 4K...");
+    onProgress("Finalizando renderização 4K Studio...");
 
     try {
       const response = await ai.models.generateContent({
-        model: modelName,
+        model: 'gemini-2.5-flash-image',
         contents: { parts },
-        config: {
-          imageConfig: {
-            aspectRatio: config.aspectRatio as any
-          }
-        }
+        config: { imageConfig: { aspectRatio: config.aspectRatio as any } }
       });
 
       if (response.candidates && response.candidates[0].content.parts) {
         for (const part of response.candidates[0].content.parts) {
-          if (part.inlineData) {
-            return `data:image/png;base64,${part.inlineData.data}`;
-          }
+          if (part.inlineData) return `data:image/png;base64,${part.inlineData.data}`;
         }
       }
-      throw new Error("A IA não gerou uma imagem válida.");
+      throw new Error("Falha na geração da imagem.");
     } catch (error: any) {
-      console.error("Image Gen Error:", error);
       throw new Error(this.parseError(error));
     }
   }

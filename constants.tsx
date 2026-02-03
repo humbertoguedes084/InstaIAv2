@@ -3,6 +3,18 @@ import { Niche, PlanType, UserStatus, UserAccount } from './types';
 
 export const NICHES: Niche[] = [
   {
+    id: 'sushi',
+    name: 'Sushi & Izakaya Premium',
+    icon: '🍣',
+    description: 'Estética oriental minimalista com foco no frescor extremo e luxo japonês.',
+    context: {
+      lighting: "soft focused spot-lighting on the fish texture, high-contrast chiaroscuro style",
+      atmosphere: "zen high-end sushi bar, dark polished stone background, minimalist elegance",
+      colors: "vibrant salmon pink, deep tuna red, wasabi neon green, pure white rice",
+      composition: "perfect geometric alignment, rule of thirds, extreme macro of raw textures"
+    }
+  },
+  {
     id: 'pizzaria',
     name: 'Pizzaria Gourmet',
     icon: '🍕',
@@ -83,7 +95,7 @@ export const NICHES: Niche[] = [
       lighting: "golden hour architectural lighting, interior ambient glow, balanced exposure",
       atmosphere: "minimalist luxury mansion, modern penthouse, high-ceiling loft",
       colors: "oak wood tones, concrete grey, navy blue accents, pure white",
-      composition: "wide-angle architectural shot, perfect vertical lines, leading lines composition"
+      composition: "wide-angle architectural shot, perfect vertical lines, leading lines"
     }
   },
   {
@@ -131,7 +143,7 @@ export const NICHES: Niche[] = [
       lighting: "warm side-lighting to reveal steam and texture, rim light on the bun",
       atmosphere: "modern industrial burger joint, urban nightlife vibe",
       colors: "rich toasted browns, vibrant cheddar yellow, fresh organic greens",
-      composition: "monumental stack shot, macro focus on the melting cheese and dripping juices"
+      composition: "monumental stack shot, macro focus on melting cheese and dripping juices"
     }
   },
   {
@@ -240,18 +252,6 @@ export const NICHES: Niche[] = [
       atmosphere: "minimalist tech workstation, dark laboratory",
       colors: "deep space grey, neon violet, electric cyan",
       composition: "perfectly aligned tech grid, macro of circuits and textures"
-    }
-  },
-  {
-    id: 'sushi',
-    name: 'Sushi & Izakaya Premium',
-    icon: '🍣',
-    description: 'Estética oriental minimalista com foco no frescor extremo do peixe cru.',
-    context: {
-      lighting: "soft focused spot-lighting on the fish texture, elegant shadow play",
-      atmosphere: "zen high-end sushi bar, minimalist dark wood background",
-      colors: "vibrant salmon pink, tuna red, wasabi green, clean white rice",
-      composition: "perfect geometric alignment, rule of thirds, extreme macro of raw textures"
     }
   }
 ];
