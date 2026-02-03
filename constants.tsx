@@ -4,218 +4,86 @@ import { Niche, PlanType, UserStatus, UserAccount } from './types';
 export const NICHES: Niche[] = [
   {
     id: 'pizzaria',
-    name: 'Pizzaria',
+    name: 'Pizzaria Gourmet',
     icon: '🍕',
-    description: 'Destaque para queijo derretido e texturas rústicas.',
+    description: 'Destaque para queijo derretido e texturas rústicas de alta gastronomia.',
     context: {
-      lighting: "warm glowing oven light, top-down spotlight",
-      atmosphere: "rustic italian kitchen, flour dust, cozy",
-      colors: "vibrant tomato red, golden crust, basil green",
-      composition: "close-up of a slice being lifted with cheese pull"
+      lighting: "warm cinematic oven glow, directional spotlighting to highlight textures",
+      atmosphere: "luxury artisan pizzeria, moody lighting, expensive ingredients",
+      colors: "deep san marzano red, charred crust gold, vibrant basil green",
+      composition: "extreme macro of the texture, 45-degree professional food photography angle"
     }
   },
   {
     id: 'acaiteria',
-    name: 'Açaiteria',
+    name: 'Açaí Premium',
     icon: '🍧',
-    description: 'Explosão de cores tropicais e frescor.',
+    description: 'Explosão de frescor tropical com estética clean e refrescante.',
     context: {
-      lighting: "bright natural sunlight, high contrast",
-      atmosphere: "summer vibe, tropical fruits, energetic",
-      colors: "deep purple, bright yellow mango, red strawberry",
-      composition: "macro shot of toppings falling into the bowl"
-    }
-  },
-  {
-    id: 'sorveteria',
-    name: 'Sorveteria',
-    icon: '🍦',
-    description: 'Texturas cremosas e tons pastéis.',
-    context: {
-      lighting: "soft pastel studio lighting, minimal shadows",
-      atmosphere: "sweet shop, playful, refreshing",
-      colors: "mint green, strawberry pink, vanilla cream",
-      composition: "hero shot of a dripping cone or sundae"
+      lighting: "bright high-key natural sunlight, crisp shadows, moisture droplets",
+      atmosphere: "upscale tropical resort, clean modern presentation",
+      colors: "intense velvet purple, neon fruit highlights, clean white marble",
+      composition: "dynamic top-down flat lay with artistic topping placement"
     }
   },
   {
     id: 'veiculos',
-    name: 'Loja de Veículos',
+    name: 'Concessionária de Luxo',
     icon: '🚗',
-    description: 'Reflexos metálicos e visual premium.',
+    description: 'Reflexos metálicos, profundidade e visual de comercial de TV.',
     context: {
-      lighting: "dramatic neon reflections, light trails",
-      atmosphere: "urban night, modern showroom, professional",
-      colors: "metallic silver, deep black, electric blue",
-      composition: "low angle wide shot, aggressive stance"
-    }
-  },
-  {
-    id: 'roupas',
-    name: 'Loja de Roupa',
-    icon: '👕',
-    description: 'Estilo editorial de moda e caimento.',
-    context: {
-      lighting: "magazine studio lighting, soft box",
-      atmosphere: "boutique, minimalist, fashionable",
-      colors: "neutral beige, crisp white, brand specific",
-      composition: "full body lifestyle shot or detailed fabric macro"
+      lighting: "soft-box studio reflections, dramatic rim lighting, long exposure light trails",
+      atmosphere: "high-tech minimalist hangar or modern architectural background",
+      colors: "metallic silver, carbon fiber black, deep sapphire blue",
+      composition: "hero perspective, low-wide angle, aggressive professional car photography"
     }
   },
   {
     id: 'cosmeticos',
-    name: 'Cosméticos',
+    name: 'Cosméticos & Estética',
     icon: '💄',
-    description: 'Suavidade, spa e luxo minimalista.',
+    description: 'Minimalismo, luxo silencioso e texturas impecáveis.',
     context: {
-      lighting: "beauty lighting, ring light reflections",
-      atmosphere: "luxury spa, clean, high-end vanity",
-      colors: "rose gold, nude tones, pearl white",
-      composition: "centered product shot with artistic smears"
+      lighting: "soft diffused beauty lighting, ethereal glow, pearl-like reflections",
+      atmosphere: "high-end clinical spa, minimalist laboratory, luxury vanity",
+      colors: "champagne gold, soft nude, silk white, rose quartz",
+      composition: "perfectly centered product symmetry, artistic liquid smears"
+    }
+  },
+  {
+    id: 'roupas',
+    name: 'Moda Editorial',
+    icon: '👕',
+    description: 'Estética de revista de moda (Vogue/GQ style).',
+    context: {
+      lighting: "professional studio strobe lighting, high contrast, fashion show mood",
+      atmosphere: "minimalist urban studio, industrial loft, high-end boutique",
+      colors: "neutral editorial palette, high saturation on garments",
+      composition: "full-length editorial pose, rule of thirds, dynamic movement"
     }
   },
   {
     id: 'burger',
-    name: 'Hamburgueria',
+    name: 'Burguer Artesanal',
     icon: '🍔',
-    description: 'Foco na suculência e camadas do burger.',
+    description: 'Suculência extrema e visual "food porn" profissional.',
     context: {
-      lighting: "dramatic side lighting with rim light",
-      atmosphere: "steam rising, bokeh street background",
-      colors: "warm browns, melted yellow cheese, fresh green",
-      composition: "hero stack shot from low angle"
-    }
-  },
-  {
-    id: 'petshop',
-    name: 'Pet Shop',
-    icon: '🐾',
-    description: 'Visual fofo, limpo e acolhedor.',
-    context: {
-      lighting: "soft even daylight, cheerful",
-      atmosphere: "clean grooming salon, playful environment",
-      colors: "soft blues, whites, friendly yellows",
-      composition: "eye-level shot with focus on animal's face"
-    }
-  },
-  {
-    id: 'academia',
-    name: 'Academia / Fitness',
-    icon: '💪',
-    description: 'Energia, suor e motivação extrema.',
-    context: {
-      lighting: "harsh industrial lighting, high contrast shadows",
-      atmosphere: "gritty gym, modern fitness center",
-      colors: "dark grays, safety orange, electric yellow",
-      composition: "dynamic action shot, focus on muscles and equipment"
-    }
-  },
-  {
-    id: 'clinica',
-    name: 'Clínica de Estética',
-    icon: '✨',
-    description: 'Assepsia, tecnologia e bem-estar.',
-    context: {
-      lighting: "bright clinical white, teal accents",
-      atmosphere: "modern medical spa, advanced tech",
-      colors: "clean white, turquoise, silver",
-      composition: "top-down view of tools or close-up of treatment"
-    }
-  },
-  {
-    id: 'imobiliaria',
-    name: 'Imobiliária',
-    icon: '🏠',
-    description: 'Amplitude, luz natural e sofisticação.',
-    context: {
-      lighting: "golden hour through large windows",
-      atmosphere: "luxury home interior, spacious, inviting",
-      colors: "warm wood, marble white, soft grays",
-      composition: "wide angle interior shot with perfect symmetry"
-    }
-  },
-  {
-    id: 'sushi',
-    name: 'Restaurante Japonês',
-    icon: '🍣',
-    description: 'Minimalismo oriental e frescor do mar.',
-    context: {
-      lighting: "soft directional light, slate gray shadows",
-      atmosphere: "zen restaurant, stone and wood textures",
-      colors: "salmon pink, nori black, wasabi green",
-      composition: "macro shot on dark slate plate, artistic garnish"
-    }
-  },
-  {
-    id: 'salao',
-    name: 'Salão de Beleza',
-    icon: '💇‍♀️',
-    description: 'Transformação, brilho e auto-estima.',
-    context: {
-      lighting: "studio hair lighting, glossy reflections",
-      atmosphere: "vibrant modern salon, professional mirrors",
-      colors: "vivid hair colors, sleek blacks, whites",
-      composition: "focus on hair texture and movement"
-    }
-  },
-  {
-    id: 'cafeteria',
-    name: 'Cafeteria / Bakery',
-    icon: '☕',
-    description: 'Aconchego e aroma de grãos torrados.',
-    context: {
-      lighting: "warm moody cafe lighting, morning sun",
-      atmosphere: "cozy corner, wood and brick, steam",
-      colors: "coffee brown, cream, toasted orange",
-      composition: "latte art macro with blurred background"
-    }
-  },
-  {
-    id: 'suplementos',
-    name: 'Suplementos',
-    icon: '💊',
-    description: 'Ciência, força e resultados rápidos.',
-    context: {
-      lighting: "top-down rim lighting, clinical yet powerful",
-      atmosphere: "modern laboratory or training facility",
-      colors: "bold black, neon accents, stark white",
-      composition: "hero product shot with water splashes or powder clouds"
+      lighting: "warm side-lighting to reveal steam and texture, rim light on the bun",
+      atmosphere: "modern industrial burger joint, urban nightlife vibe",
+      colors: "rich toasted browns, vibrant cheddar yellow, fresh organic greens",
+      composition: "monumental stack shot, macro focus on the melting cheese and dripping juices"
     }
   },
   {
     id: 'joalheria',
-    name: 'Joalheria',
+    name: 'Joalheria & Relógios',
     icon: '💍',
-    description: 'Brilho macro e luxo absoluto.',
+    description: 'Brilho facetado e luxo absoluto em macro.',
     context: {
-      lighting: "sharp point lights for diamond fire",
-      atmosphere: "dark velvet, sophisticated, silent luxury",
-      colors: "gold, silver, velvet black",
-      composition: "extreme macro, shallow depth of field"
-    }
-  },
-  {
-    id: 'dentista',
-    name: 'Odontologia',
-    icon: '🦷',
-    description: 'Sorriso perfeito e tecnologia dental.',
-    context: {
-      lighting: "bright surgical white, blue tints",
-      atmosphere: "modern dental office, ultra-clean",
-      colors: "sky blue, pure white, polished silver",
-      composition: "focus on the brightness of a white smile"
-    }
-  },
-  {
-    id: 'otica',
-    name: 'Ótica',
-    icon: '👓',
-    description: 'Clareza, estilo e design ocular.',
-    context: {
-      lighting: "soft reflections on glass, studio style",
-      atmosphere: "minimalist display, fashion forward",
-      colors: "gradient backgrounds, clear lenses",
-      composition: "3/4 view of eyewear with lens transparency"
+      lighting: "precise hard-point jewelry lights for star-burst flares and caustic reflections",
+      atmosphere: "black velvet infinity background, sophisticated dark luxury",
+      colors: "24k gold, polished platinum, obsidian black",
+      composition: "extreme close-up macro, razor-sharp focus on details, shallow depth of field"
     }
   }
 ];
@@ -265,7 +133,7 @@ export const PLANS = [
     price: 'R$ 49,90',
     credits: 40,
     features: [
-      'Imagens em Qualidade Standard',
+      'Imagens em Qualidade Agência',
       'Até 40 artes por mês',
       'Direcionamento Criativo via Prompt',
       'Suporte via E-mail',
@@ -277,7 +145,7 @@ export const PLANS = [
     price: 'R$ 97,90',
     credits: 100,
     features: [
-      'Imagens em Qualidade Standard',
+      'Imagens em Qualidade Agência',
       'Até 100 artes por mês',
       'Prioridade na Renderização',
       'Filtros Exclusivos por Nicho',

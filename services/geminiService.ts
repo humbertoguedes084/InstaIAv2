@@ -16,11 +16,19 @@ export class GeminiService {
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: `
-          Persona: Social Media Manager de alto nível.
+          Persona: Diretor de Redação de uma Agência de Publicidade Global (vencedora de Cannes Lions).
           Nicho: ${niche.name}.
-          Descrição: ${config.text || niche.description}.
-          Preço: ${config.price || 'Consultar'}.
-          Tarefa: Criar legenda persuasiva (Copywriting) para Instagram. Use emojis, gatilhos mentais e hashtags.
+          Contexto do Produto: ${config.text || niche.description}.
+          Preço Estratégico: ${config.price || 'Sob consulta'}.
+          
+          Tarefa: Criar uma legenda persuasiva de alta conversão para Instagram.
+          Estrutura Obrigatória:
+          1. Gancho (Hook) impactante nas primeiras 3 palavras.
+          2. Desenvolvimento usando gatilhos de escassez ou desejo.
+          3. CTA (Chamada para Ação) clara e direta.
+          4. Mix de 5-7 hashtags estratégicas.
+          
+          Tom de Voz: Sofisticado, magnético e profissional.
           Idioma: Português do Brasil.
         `.trim(),
         config: {
@@ -49,24 +57,36 @@ export class GeminiService {
     if (!apiKey) throw new Error("KEY_MISSING");
 
     const ai = new GoogleGenAI({ apiKey });
-    onProgress("Analisando ativos da marca...");
+    onProgress("Direção de arte em curso...");
     
-    // Usamos o Flash Image 2.5 como padrão para velocidade e custo no SaaS
     const modelName = 'gemini-2.5-flash-image';
     
-    const prompt = `
-      Professional Instagram Advertisement Studio Photography for ${niche.name}.
-      Core Subject: ${config.text || 'premium product'}.
-      Context: ${niche.context.atmosphere}.
-      Lighting/Style: ${niche.context.lighting}.
-      Instructions: Incorporate the provided brand elements. Maintain consistency with the style reference provided. 
-      The price to display or suggest is ${config.price || ''}.
-      Final result: High-end commercial quality, clean, sharp, 8k.
+    // Prompt de Agência de Elite
+    const agencyStandardPrompt = `
+      [AGENCY STANDARD DIRECTIVE]
+      Role: World-class Commercial Product Photographer & Creative Director.
+      Style: High-end luxury advertisement, high production value, commercial studio photography.
+      Technical: 8k resolution, sharp textures, ray-traced reflections, professional color grading, shot on Phase One XF, 100mm macro lens.
+      
+      [SCENE SETUP]
+      Niche: ${niche.name}.
+      Creative Concept: ${config.text || 'Premium presentation of ' + niche.name}.
+      Lighting Strategy: Professional 3-point studio lighting (Key, Fill, Rim), cinematic bokeh, soft elegant shadows.
+      Atmosphere: ${niche.context.atmosphere}.
+      Color Palette: ${niche.context.colors}.
+      Composition: ${niche.context.composition}.
+      
+      [BRAND INTEGRATION]
+      ${assets.brandLogo ? "Masterfully integrate the uploaded logo as a physical brand element (embossed, printed, or elegant signage)." : ""}
+      ${assets.styleReference ? "Strictly replicate the artistic mood, lighting temperature, and visual aesthetic from the reference image." : ""}
+      ${config.price ? `Subtle high-end price overlay or tag suggesting a value of ${config.price}.` : ""}
+      
+      Final Quality: Masterpiece, hyper-realistic, commercially viable, magazine quality, clean minimalist aesthetics.
     `.trim();
 
-    const parts: any[] = [{ text: prompt }];
+    const parts: any[] = [{ text: agencyStandardPrompt }];
 
-    // Adiciona Foto do Produto
+    // Adição dinâmica de arquivos (conforme solicitado: cliente escolhe quantos subir)
     if (assets.productPhoto) {
       parts.push({
         inlineData: {
@@ -76,7 +96,6 @@ export class GeminiService {
       });
     }
 
-    // Adiciona Logo da Marca
     if (assets.brandLogo) {
       parts.push({
         inlineData: {
@@ -86,7 +105,6 @@ export class GeminiService {
       });
     }
 
-    // Adiciona Referência de Estilo
     if (assets.styleReference) {
       parts.push({
         inlineData: {
@@ -96,7 +114,7 @@ export class GeminiService {
       });
     }
 
-    onProgress("Renderizando arte final...");
+    onProgress("Finalizando renderização 4K...");
 
     try {
       const response = await ai.models.generateContent({
@@ -116,7 +134,7 @@ export class GeminiService {
           }
         }
       }
-      throw new Error("Não foi possível gerar a imagem com os ativos fornecidos.");
+      throw new Error("A IA não atingiu o padrão de agência exigido. Tente detalhar mais a cena.");
     } catch (error: any) {
       console.error("Image Gen Error:", error);
       throw error;
