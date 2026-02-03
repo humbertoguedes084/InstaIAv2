@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Sparkles, Download, Trash2, Key, Info, ExternalLink, RefreshCw, Globe, Link as LinkIcon, ShieldCheck, 
-  Image as ImageIcon, Upload, Camera, Tag, X, FileImage, AlertCircle
+  Image as ImageIcon, Upload, Camera, Tag, X, FileImage, AlertCircle, RefreshCcw
 } from 'lucide-react';
 import { NICHES } from '../constants';
 import { Niche, AssetUploads, GenerationConfig, GeneratedImage, UserUsage } from '../types';
@@ -28,6 +28,7 @@ interface GeneratorProps {
 const Generator: React.FC<GeneratorProps> = ({ onSuccess, usage, onDeleteImage, onDownloadImage }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progressMsg, setProgressMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [generatedResult, setGeneratedResult] = useState<{url: string, caption: string, sources: any[]} | null>(null);
   const [needsKeySelection, setNeedsKeySelection] = useState(false);
   
@@ -47,8 +48,6 @@ const Generator: React.FC<GeneratorProps> = ({ onSuccess, usage, onDeleteImage, 
 
   const availableCredits = usage.credits.weekly - usage.credits.used;
   const hasEnoughCredits = availableCredits > 0;
-  
-  // Validação: precisa de pelo menos uma imagem OU texto
   const hasAnyInput = assets.productPhoto || assets.brandLogo || assets.styleReference || config.text.trim().length > 3;
 
   useEffect(() => {
@@ -77,13 +76,6 @@ const Generator: React.FC<GeneratorProps> = ({ onSuccess, usage, onDeleteImage, 
     reader.readAsDataURL(file);
   };
 
-  const handleActivateEngine = async () => {
-    if (window.aistudio) {
-      await window.aistudio.openSelectKey();
-      setNeedsKeySelection(false);
-    }
-  };
-
   const startGeneration = async () => {
     if (!hasEnoughCredits) {
       window.open("https://wa.me/5584992099925", '_blank');
@@ -92,6 +84,7 @@ const Generator: React.FC<GeneratorProps> = ({ onSuccess, usage, onDeleteImage, 
 
     setIsGenerating(true);
     setGeneratedResult(null);
+    setErrorMsg(null);
 
     try {
       const imageUrl = await GeminiService.generateMarketingImage(selectedNiche, assets, config, setProgressMsg);
@@ -108,10 +101,10 @@ const Generator: React.FC<GeneratorProps> = ({ onSuccess, usage, onDeleteImage, 
       });
     } catch (error: any) {
       console.error("Geração falhou:", error);
-      if (error.message === "KEY_MISSING" || error.message === "KEY_INVALID") {
+      if (error.message === "KEY_MISSING") {
         setNeedsKeySelection(true);
       } else {
-        alert(`Erro: ${error.message}`);
+        setErrorMsg(error.message);
       }
     } finally {
       setIsGenerating(false);
@@ -160,12 +153,10 @@ const Generator: React.FC<GeneratorProps> = ({ onSuccess, usage, onDeleteImage, 
           </div>
           <div className="space-y-4">
             <h2 className="text-3xl font-black uppercase tracking-tighter text-gray-900 italic">Conectar Estúdio</h2>
-            <p className="text-sm text-gray-500 font-bold leading-relaxed max-w-xs mx-auto">
-              Ative o motor de inteligência artificial para começar suas criações.
-            </p>
+            <p className="text-sm text-gray-500 font-bold leading-relaxed max-w-xs mx-auto">Ative o motor de inteligência artificial para começar suas criações.</p>
           </div>
           <button 
-            onClick={handleActivateEngine} 
+            onClick={async () => { await window.aistudio?.openSelectKey(); setNeedsKeySelection(false); }} 
             className="w-full py-6 bg-gray-950 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-3"
           >
             <ShieldCheck size={20} className="text-indigo-400" /> Ativar Agora
@@ -189,34 +180,29 @@ const Generator: React.FC<GeneratorProps> = ({ onSuccess, usage, onDeleteImage, 
       </div>
 
       <div className="p-4 md:p-8 space-y-12 max-w-2xl mx-auto">
+        {errorMsg && (
+          <div className="bg-red-50 border-2 border-red-100 p-6 rounded-[2rem] flex flex-col items-center text-center gap-4 animate-in slide-in-from-top-4">
+            <div className="w-12 h-12 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center"><AlertCircle size={24} /></div>
+            <div className="space-y-1">
+              <h4 className="text-sm font-black text-red-900 uppercase tracking-tighter italic">Ops! Algo deu errado</h4>
+              <p className="text-xs text-red-600 font-bold leading-relaxed">{errorMsg}</p>
+            </div>
+            <button onClick={() => setErrorMsg(null)} className="text-[10px] font-black text-red-400 uppercase tracking-widest hover:text-red-900 flex items-center gap-2">
+              <RefreshCcw size={12} /> Tentar com novo Script
+            </button>
+          </div>
+        )}
+
         {generatedResult ? (
           <div className="animate-in zoom-in-95 duration-500 space-y-8">
             <div className="relative aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white bg-gray-50">
               <img src={generatedResult.url} className="w-full h-full object-contain" alt="Arte Gerada" />
             </div>
-
             <div className="space-y-4">
               <div className="bg-gray-50 p-8 rounded-[2rem] border border-gray-100 shadow-inner">
                 <p className="text-sm font-medium text-gray-700 leading-relaxed italic whitespace-pre-wrap">{generatedResult.caption}</p>
               </div>
-
-              {generatedResult.sources.length > 0 && (
-                <div className="bg-indigo-50/50 p-6 rounded-[1.5rem] border border-indigo-100">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Globe size={14} className="text-indigo-600" />
-                    <span className="text-[10px] font-black uppercase text-indigo-600 tracking-widest">Inteligência de Mercado</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {generatedResult.sources.map((src, i) => src.web && (
-                      <a key={i} href={src.web.uri} target="_blank" className="bg-white px-3 py-1.5 rounded-full text-[9px] font-bold text-gray-500 hover:text-indigo-600 border border-indigo-100 flex items-center gap-1.5 transition-colors">
-                        <LinkIcon size={10} /> {src.web.title || 'Referência'}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
-
             <div className="grid grid-cols-2 gap-4">
                <button onClick={() => setGeneratedResult(null)} className="py-5 bg-gray-100 text-gray-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-200 transition-colors">Nova Criação</button>
                <button onClick={() => onDownloadImage(generatedResult.url, 'post-ia.png')} className="py-5 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 shadow-lg flex items-center justify-center gap-2">
@@ -226,7 +212,7 @@ const Generator: React.FC<GeneratorProps> = ({ onSuccess, usage, onDeleteImage, 
           </div>
         ) : !isGenerating ? (
           <div className="space-y-12 animate-in fade-in duration-700">
-            {/* Step 1: Niche */}
+            {/* Nicho */}
             <div className="space-y-4">
               <label className="text-xs font-black text-gray-400 uppercase tracking-widest">1. Escolha o Segmento</label>
               <div className="grid grid-cols-2 gap-3">
@@ -242,12 +228,9 @@ const Generator: React.FC<GeneratorProps> = ({ onSuccess, usage, onDeleteImage, 
               </div>
             </div>
 
-            {/* Step 2: Assets */}
+            {/* Ativos */}
             <div className="space-y-4">
-              <div className="flex justify-between items-end">
-                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">2. Ativos Visuais</label>
-                <span className="text-[8px] font-bold text-gray-300 uppercase italic">Selecione o que tiver disponível</span>
-              </div>
+              <label className="text-xs font-black text-gray-400 uppercase tracking-widest">2. Ativos Visuais (Opcional)</label>
               <div className="grid grid-cols-3 gap-4">
                 <AssetUploader label="Produto" type="productPhoto" icon={Camera} value={assets.productPhoto} optional />
                 <AssetUploader label="Logo" type="brandLogo" icon={Tag} value={assets.brandLogo} optional />
@@ -255,55 +238,42 @@ const Generator: React.FC<GeneratorProps> = ({ onSuccess, usage, onDeleteImage, 
               </div>
             </div>
 
-            {/* Step 3: Prompt & Info */}
+            {/* Prompt */}
             <div className="space-y-6">
               <div className="space-y-4">
                 <label className="text-xs font-black text-gray-400 uppercase tracking-widest">3. Direcionamento Criativo</label>
                 <textarea 
-                  placeholder="Descreva a cena: 'Luz quente de sol', 'Fundo de mármore', 'Vapor saindo'..." 
+                  placeholder="Ex: 'Garrafa em um bloco de gelo com luz neon azul'..." 
                   className="w-full bg-gray-50 border-2 border-gray-100 rounded-[2rem] px-8 py-8 font-bold text-sm outline-none min-h-[160px] focus:border-indigo-600 focus:bg-white transition-all shadow-inner" 
                   value={config.text} 
                   onChange={(e) => setConfig({...config, text: e.target.value})} 
                 />
               </div>
-
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-4">
                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Valor (Opcional)</label>
                    <input type="text" placeholder="R$ 0,00" className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 font-bold text-sm" value={config.price} onChange={(e) => setConfig({...config, price: e.target.value})} />
                 </div>
                 <div className="space-y-4">
-                   <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Formato da Arte</label>
+                   <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Formato</label>
                    <select className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 font-bold text-[10px] uppercase" value={config.aspectRatio} onChange={(e) => setConfig({...config, aspectRatio: e.target.value as any})}>
                      <option value="1:1">Quadrado (Feed)</option>
                      <option value="9:16">Vertical (Story)</option>
-                     <option value="3:4">Retrato (Social)</option>
+                     <option value="3:4">Retrato</option>
                    </select>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-4">
-              <button 
-                onClick={startGeneration} 
-                disabled={isGenerating || !hasAnyInput} 
-                className={`w-full py-7 rounded-[2.5rem] font-black text-xl shadow-2xl transition-all flex items-center justify-center gap-4 active:scale-[0.98] ${
-                  !hasAnyInput ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-gray-950 text-white hover:bg-indigo-600'
-                }`}
-              >
-                <Sparkles size={28} className={hasAnyInput ? "text-indigo-400" : "text-gray-300"} /> 
-                {hasAnyInput ? 'RENDERIZAR AGORA' : 'ADICIONE FOTO OU DESCRIÇÃO'}
-              </button>
-              
-              {!hasAnyInput && (
-                <p className="text-[9px] text-gray-400 text-center font-bold uppercase tracking-widest flex items-center justify-center gap-2">
-                  <AlertCircle size={12} /> Envie pelo menos uma foto ou descreva sua ideia
-                </p>
-              )}
-            </div>
-            
-            <button onClick={() => setNeedsKeySelection(true)} className="w-full flex items-center justify-center gap-2 text-[9px] font-black text-gray-300 uppercase tracking-widest hover:text-indigo-400 transition-colors">
-              <RefreshCw size={10} /> Recarregar Conexão IA
+            <button 
+              onClick={startGeneration} 
+              disabled={isGenerating || !hasAnyInput} 
+              className={`w-full py-7 rounded-[2.5rem] font-black text-xl shadow-2xl transition-all flex items-center justify-center gap-4 active:scale-[0.98] ${
+                !hasAnyInput ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-gray-950 text-white hover:bg-indigo-600'
+              }`}
+            >
+              <Sparkles size={28} className={hasAnyInput ? "text-indigo-400" : "text-gray-300"} /> 
+              {hasAnyInput ? 'RENDERIZAR AGORA' : 'ADICIONE FOTO OU DESCRIÇÃO'}
             </button>
           </div>
         ) : (
@@ -311,9 +281,7 @@ const Generator: React.FC<GeneratorProps> = ({ onSuccess, usage, onDeleteImage, 
             <div className="relative w-24 h-24 mx-auto">
               <div className="absolute inset-0 border-4 border-indigo-600/20 rounded-full"></div>
               <div className="absolute inset-0 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-              <div className="absolute inset-0 flex items-center justify-center text-indigo-600 animate-pulse">
-                <Globe size={32} />
-              </div>
+              <div className="absolute inset-0 flex items-center justify-center text-indigo-600 animate-pulse"><Globe size={32} /></div>
             </div>
             <div className="space-y-3">
               <h3 className="text-2xl font-black text-gray-900 uppercase italic tracking-tighter">{progressMsg}</h3>

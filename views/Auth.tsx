@@ -42,6 +42,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
         if (data.user) {
           const isMasterAdmin = cleanEmail === 'humbertoguedesdev@gmail.com';
           
+          // Novos usuários iniciam com 0 créditos semanais (credits_weekly: 0)
           const { error: profileError } = await supabase
             .from('profiles')
             .upsert({
@@ -66,7 +67,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
           setIsPending(false);
           if (!isMasterAdmin) {
             setMode('login');
-            setError("Registro concluído! Sua conta está em análise. Avisaremos por e-mail quando for liberada.");
+            setError("Registro concluído! Sua conta está em análise. Você inicia com 0 créditos. Após a aprovação, seu saldo será liberado conforme sua compra.");
           } else {
             onAuthSuccess(data.user.id, cleanEmail);
           }
@@ -185,12 +186,6 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
           </div>
         </div>
       </div>
-      <style>{`
-        @keyframes progress {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(200%); }
-        }
-      `}</style>
     </div>
   );
 };

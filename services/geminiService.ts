@@ -7,6 +7,38 @@ export class GeminiService {
     return process.env.API_KEY;
   }
 
+  static parseError(error: any): string {
+    const msg = error?.message?.toLowerCase() || "";
+    const stack = error?.stack?.toLowerCase() || "";
+    
+    // Erros de Segurança / Moderação
+    if (msg.includes("safety") || msg.includes("candidate was blocked") || msg.includes("finish_reason: 3")) {
+      return "CONTEÚDO BLOQUEADO: Sua descrição ou imagem acionou os filtros de moderação da IA. Tente remover palavras que possam ser interpretadas como agressivas, sensuais ou proibidas. Use uma linguagem mais profissional e neutra.";
+    }
+    
+    // Erros de Limite / Quota
+    if (msg.includes("quota") || msg.includes("exhausted") || msg.includes("429") || msg.includes("limit reached")) {
+      return "LIMITE ATINGIDO: O motor de inteligência artificial recebeu muitas requisições simultâneas. Aguarde 30 a 60 segundos antes de tentar novamente para que o sistema se estabilize.";
+    }
+    
+    // Erros de Configuração / Chave
+    if (msg.includes("api key") || msg.includes("invalid api key") || msg.includes("not found")) {
+      return "ERRO DE CONEXÃO: Sua chave de acesso à IA expirou ou é inválida. Clique no botão 'Recarregar Conexão' ou verifique se sua conta no Google AI Studio está ativa.";
+    }
+    
+    // Erros de Dados da Imagem
+    if (msg.includes("inline data") || msg.includes("mime type") || msg.includes("base64")) {
+      return "FALHA NO ARQUIVO: O formato da imagem enviada não é compatível ou o arquivo está corrompido. Tente usar imagens JPG/PNG com menos de 4MB.";
+    }
+    
+    // Erros de Prompt / Instrução
+    if (msg.includes("prompt") || msg.includes("invalid argument")) {
+      return "ERRO DE ROTEIRO: A descrição fornecida é confusa para a IA. Tente ser mais específico sobre o cenário, luz e posição do produto.";
+    }
+    
+    return `FALHA TÉCNICA: O motor de renderização encontrou um problema inesperado (${msg}). Tente simplificar sua descrição ou usar uma foto diferente.`;
+  }
+
   static async generateSmartCaption(niche: Niche, config: GenerationConfig): Promise<{text: string, sources: any[]}> {
     const apiKey = this.getApiKey();
     if (!apiKey) throw new Error("KEY_MISSING");
@@ -16,19 +48,19 @@ export class GeminiService {
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: `
-          Persona: Diretor de Redação de uma Agência de Publicidade Global (vencedora de Cannes Lions).
+          Persona: Diretor de Redação de uma Agência de Publicidade Global.
           Nicho: ${niche.name}.
           Contexto do Produto: ${config.text || niche.description}.
           Preço Estratégico: ${config.price || 'Sob consulta'}.
           
           Tarefa: Criar uma legenda persuasiva de alta conversão para Instagram.
           Estrutura Obrigatória:
-          1. Gancho (Hook) impactante nas primeiras 3 palavras.
-          2. Desenvolvimento usando gatilhos de escassez ou desejo.
-          3. CTA (Chamada para Ação) clara e direta.
-          4. Mix de 5-7 hashtags estratégicas.
+          1. Gancho (Hook) impactante.
+          2. Desenvolvimento com gatilhos mentais.
+          3. CTA (Chamada para Ação).
+          4. Mix de hashtags.
           
-          Tom de Voz: Sofisticado, magnético e profissional.
+          Tom de Voz: Sofisticado e magnético.
           Idioma: Português do Brasil.
         `.trim(),
         config: {
@@ -43,7 +75,7 @@ export class GeminiService {
       };
     } catch (error: any) {
       console.error("Caption Error:", error);
-      throw error;
+      throw new Error(this.parseError(error));
     }
   }
 
@@ -61,32 +93,29 @@ export class GeminiService {
     
     const modelName = 'gemini-2.5-flash-image';
     
-    // Prompt de Agência de Elite
     const agencyStandardPrompt = `
       [AGENCY STANDARD DIRECTIVE]
-      Role: World-class Commercial Product Photographer & Creative Director.
       Style: High-end luxury advertisement, high production value, commercial studio photography.
-      Technical: 8k resolution, sharp textures, ray-traced reflections, professional color grading, shot on Phase One XF, 100mm macro lens.
+      Technical: 8k, sharp, professional color grading, magazine quality.
       
       [SCENE SETUP]
       Niche: ${niche.name}.
       Creative Concept: ${config.text || 'Premium presentation of ' + niche.name}.
-      Lighting Strategy: Professional 3-point studio lighting (Key, Fill, Rim), cinematic bokeh, soft elegant shadows.
+      Lighting Strategy: ${niche.context.lighting}.
       Atmosphere: ${niche.context.atmosphere}.
       Color Palette: ${niche.context.colors}.
       Composition: ${niche.context.composition}.
       
       [BRAND INTEGRATION]
-      ${assets.brandLogo ? "Masterfully integrate the uploaded logo as a physical brand element (embossed, printed, or elegant signage)." : ""}
-      ${assets.styleReference ? "Strictly replicate the artistic mood, lighting temperature, and visual aesthetic from the reference image." : ""}
-      ${config.price ? `Subtle high-end price overlay or tag suggesting a value of ${config.price}.` : ""}
+      ${assets.brandLogo ? "Masterfully integrate the uploaded logo as a physical brand element." : ""}
+      ${assets.styleReference ? "Strictly replicate the artistic mood and lighting from the reference image." : ""}
+      ${config.price ? `Subtle high-end price hint of ${config.price}.` : ""}
       
-      Final Quality: Masterpiece, hyper-realistic, commercially viable, magazine quality, clean minimalist aesthetics.
+      Final Quality: Photorealistic masterpiece.
     `.trim();
 
     const parts: any[] = [{ text: agencyStandardPrompt }];
 
-    // Adição dinâmica de arquivos (conforme solicitado: cliente escolhe quantos subir)
     if (assets.productPhoto) {
       parts.push({
         inlineData: {
@@ -134,10 +163,10 @@ export class GeminiService {
           }
         }
       }
-      throw new Error("A IA não atingiu o padrão de agência exigido. Tente detalhar mais a cena.");
+      throw new Error("A IA não gerou uma imagem válida.");
     } catch (error: any) {
       console.error("Image Gen Error:", error);
-      throw error;
+      throw new Error(this.parseError(error));
     }
   }
 }

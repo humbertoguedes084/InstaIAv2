@@ -63,6 +63,66 @@ export const NICHES: Niche[] = [
     }
   },
   {
+    id: 'petshop',
+    name: 'Pet Shop Boutique',
+    icon: '🐾',
+    description: 'Estética fofa e luxuosa para cuidados animais premium.',
+    context: {
+      lighting: "warm soft daylight, playful highlights, cozy shadows",
+      atmosphere: "luxury pet spa, colorful modern interior, high-end grooming studio",
+      colors: "pastel blues, soft pinks, clean beige, mint green",
+      composition: "eye-level portrait, expressive animal features, professional pet photography"
+    }
+  },
+  {
+    id: 'imoveis',
+    name: 'Imobiliária High-End',
+    icon: '🏢',
+    description: 'Visual arquitetônico de revistas de luxo e design.',
+    context: {
+      lighting: "golden hour architectural lighting, interior ambient glow, balanced exposure",
+      atmosphere: "minimalist luxury mansion, modern penthouse, high-ceiling loft",
+      colors: "oak wood tones, concrete grey, navy blue accents, pure white",
+      composition: "wide-angle architectural shot, perfect vertical lines, leading lines composition"
+    }
+  },
+  {
+    id: 'dentista',
+    name: 'Odontologia Estética',
+    icon: '🦷',
+    description: 'Visual clínico impecável, brilho e sensação de saúde.',
+    context: {
+      lighting: "sterile high-key lighting, dental reflector glow, sparkling highlights",
+      atmosphere: "modern high-tech clinic, minimalist white luxury",
+      colors: "cyan blue, titanium white, silver chrome, healthy pinks",
+      composition: "macro focus on details, clean clinical symmetry, professional medical photography"
+    }
+  },
+  {
+    id: 'advocacia',
+    name: 'Advocacia & Business',
+    icon: '⚖️',
+    description: 'Sobriedade, autoridade e visual corporativo clássico.',
+    context: {
+      lighting: "moody office lighting, desk lamp glow, soft executive shadows",
+      atmosphere: "traditional mahogany library, modern glass skyscraper office",
+      colors: "deep mahogany, brass gold, charcoal grey, oxford blue",
+      composition: "formal executive portrait, stable horizontal lines, authoritative depth"
+    }
+  },
+  {
+    id: 'suplementos',
+    name: 'Suplementação & Fitness',
+    icon: '💪',
+    description: 'Energia, força e texturas metálicas/suadas.',
+    context: {
+      lighting: "harsh side-lighting to emphasize muscle and texture, dramatic shadows",
+      atmosphere: "dark industrial gym, professional crossfit box, futuristic lab",
+      colors: "neon electric blue, carbon black, metallic orange, vibrant red",
+      composition: "dynamic low-angle shot, extreme sharpness, high-contrast action feel"
+    }
+  },
+  {
     id: 'burger',
     name: 'Burguer Artesanal',
     icon: '🍔',
@@ -75,15 +135,123 @@ export const NICHES: Niche[] = [
     }
   },
   {
-    id: 'joalheria',
-    name: 'Joalheria & Relógios',
-    icon: '💍',
-    description: 'Brilho facetado e luxo absoluto em macro.',
+    id: 'barbearia',
+    name: 'Barbearia Premium',
+    icon: '✂️',
+    description: 'Visual vintage moderno, couro e texturas de metal escovado.',
     context: {
-      lighting: "precise hard-point jewelry lights for star-burst flares and caustic reflections",
-      atmosphere: "black velvet infinity background, sophisticated dark luxury",
-      colors: "24k gold, polished platinum, obsidian black",
-      composition: "extreme close-up macro, razor-sharp focus on details, shallow depth of field"
+      lighting: "warm tungsten bulbs, neon sign reflections, sharp highlights on tools",
+      atmosphere: "vintage luxury barbershop, leather chairs, wood panels",
+      colors: "leather brown, chrome silver, deep navy, classic red",
+      composition: "cinematic depth of field, focused on craftsmanship details"
+    }
+  },
+  {
+    id: 'cafe',
+    name: 'Cafeteria Especializada',
+    icon: '☕',
+    description: 'Aconchego, vapor e grãos selecionados em alta definição.',
+    context: {
+      lighting: "soft morning window light, warm lamp glow, steam backlit",
+      atmosphere: "minimalist nordic cafe, rustic brick and wood elements",
+      colors: "espresso brown, velvet cream, terracotta, matte black",
+      composition: "top-down artistic latte art, cozy lifestyle setup"
+    }
+  },
+  {
+    id: 'vinhos',
+    name: 'Adega & Vinhos',
+    icon: '🍷',
+    description: 'Elegância, transparência e visual de sommelier de elite.',
+    context: {
+      lighting: "backlighting to show wine clarity, candle flicker, soft rim lights",
+      atmosphere: "stone wine cellar, luxury dining, vineyard sunset mood",
+      colors: "deep burgundy, amber gold, forest green, rustic oak",
+      composition: "elegant vertical pour, macro focus on glass condensation"
+    }
+  },
+  {
+    id: 'joalheria',
+    name: 'Joalheria & Luxo',
+    icon: '💍',
+    description: 'Brilho facetado e luxo absoluto em macro fotografia.',
+    context: {
+      lighting: "precise jewelry sparkle lights, hard caustic reflections",
+      atmosphere: "black infinity studio, sophisticated dark elegance",
+      colors: "24k gold, polished silver, diamond white, obsidian",
+      composition: "extreme macro, razor-sharp focus on gemstones and facets"
+    }
+  },
+  {
+    id: 'farmacia',
+    name: 'Saúde & Farmácia',
+    icon: '💊',
+    description: 'Visual clean, confiável e ultra-nítido.',
+    context: {
+      lighting: "pure white clinical light, shadowless photography",
+      atmosphere: "modern laboratory, pristine shelves, wellness focus",
+      colors: "medical blue, bright white, mint green",
+      composition: "symmetrical product placement, high clarity, reliable feel"
+    }
+  },
+  {
+    id: 'escola',
+    name: 'Cursos & Educação',
+    icon: '📚',
+    description: 'Visual vibrante, inspirador e focado em aprendizado.',
+    context: {
+      lighting: "bright inspiring daylight, colorful environment",
+      atmosphere: "modern coworking, vibrant classroom, digital nomad setup",
+      colors: "indigo blue, bright yellow, creative purple",
+      composition: "dynamic angles, focus on tools like tablets/books"
+    }
+  },
+  {
+    id: 'hortifruti',
+    name: 'Hortifruti Orgânico',
+    icon: '🍎',
+    description: 'Frescor máximo, cores vibrantes e texturas naturais.',
+    context: {
+      lighting: "bright natural sunlight, fresh water droplets",
+      atmosphere: "rustic farmers market, eco-friendly presentation",
+      colors: "vibrant garden colors, earthy browns, leafy greens",
+      composition: "overflowing bounty, rustic wood background, macro textures"
+    }
+  },
+  {
+    id: 'esportes',
+    name: 'Artigos Esportivos',
+    icon: '👟',
+    description: 'Movimento, velocidade e tecnologia de alta performance.',
+    context: {
+      lighting: "dramatic flash photography, high contrast, rim lighting",
+      atmosphere: "urban track, modern stadium, futuristic tech lab",
+      colors: "neon green, electric blue, aggressive black",
+      composition: "dynamic tilted angle, sense of motion, sharp details"
+    }
+  },
+  {
+    id: 'tech',
+    name: 'Tecnologia & Gadgets',
+    icon: '💻',
+    description: 'Futurismo, leds e estética de vale do silício.',
+    context: {
+      lighting: "cyberpunk neon accents, soft glow from screens",
+      atmosphere: "minimalist tech workstation, dark laboratory",
+      colors: "deep space grey, neon violet, electric cyan",
+      composition: "perfectly aligned tech grid, macro of circuits and textures"
+    }
+  },
+  {
+    id: 'sushi',
+    name: 'Sushi & Izakaya Premium',
+    icon: '🍣',
+    description: 'Estética oriental minimalista com foco no frescor extremo do peixe cru.',
+    context: {
+      lighting: "soft focused spot-lighting on the fish texture, elegant shadow play",
+      atmosphere: "zen high-end sushi bar, minimalist dark wood background",
+      colors: "vibrant salmon pink, tuna red, wasabi green, clean white rice",
+      composition: "perfect geometric alignment, rule of thirds, extreme macro of raw textures"
     }
   }
 ];
