@@ -3,9 +3,6 @@ import { GoogleGenAI } from "@google/genai";
 import { Niche, GenerationConfig, AssetUploads } from '../types';
 
 export class GeminiService {
-  /**
-   * Captura a chave de API. Prioriza process.env.API_KEY injetado pelo ambiente.
-   */
   private static getApiKey(): string | undefined {
     return process.env.API_KEY;
   }
@@ -19,10 +16,11 @@ export class GeminiService {
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: `
-          Persona: Especialista em Marketing Digital.
+          Persona: Social Media Manager de alto nível.
           Nicho: ${niche.name}.
-          Contexto: ${config.text || niche.description}.
-          Tarefa: Criar legenda persuasiva para Instagram com Emojis, Hashtags e CTA.
+          Descrição: ${config.text || niche.description}.
+          Preço: ${config.price || 'Consultar'}.
+          Tarefa: Criar legenda persuasiva (Copywriting) para Instagram. Use emojis, gatilhos mentais e hashtags.
           Idioma: Português do Brasil.
         `.trim(),
         config: {
@@ -37,7 +35,6 @@ export class GeminiService {
       };
     } catch (error: any) {
       console.error("Caption Error:", error);
-      if (error.message?.includes("404") || error.message?.includes("not found")) throw new Error("KEY_INVALID");
       throw error;
     }
   }
@@ -52,21 +49,24 @@ export class GeminiService {
     if (!apiKey) throw new Error("KEY_MISSING");
 
     const ai = new GoogleGenAI({ apiKey });
-    onProgress("Calibrando IA Generativa...");
+    onProgress("Analisando ativos da marca...");
     
-    // Modelos oficiais: gemini-2.5-flash-image (rápido) ou gemini-3-pro-image-preview (ultra)
-    const modelName = config.quality === 'STANDARD' ? 'gemini-2.5-flash-image' : 'gemini-3-pro-image-preview';
+    // Usamos o Flash Image 2.5 como padrão para velocidade e custo no SaaS
+    const modelName = 'gemini-2.5-flash-image';
     
     const prompt = `
-      Professional studio photography for ${niche.name} brand.
-      Scene: ${config.text || 'premium advertising background'}.
-      Atmosphere: ${niche.context.atmosphere}.
-      Lighting: ${niche.context.lighting}.
-      Style: High-end commercial, crisp details, 8k resolution.
+      Professional Instagram Advertisement Studio Photography for ${niche.name}.
+      Core Subject: ${config.text || 'premium product'}.
+      Context: ${niche.context.atmosphere}.
+      Lighting/Style: ${niche.context.lighting}.
+      Instructions: Incorporate the provided brand elements. Maintain consistency with the style reference provided. 
+      The price to display or suggest is ${config.price || ''}.
+      Final result: High-end commercial quality, clean, sharp, 8k.
     `.trim();
 
     const parts: any[] = [{ text: prompt }];
 
+    // Adiciona Foto do Produto
     if (assets.productPhoto) {
       parts.push({
         inlineData: {
@@ -76,7 +76,27 @@ export class GeminiService {
       });
     }
 
-    onProgress("Renderizando pixels de alta fidelidade...");
+    // Adiciona Logo da Marca
+    if (assets.brandLogo) {
+      parts.push({
+        inlineData: {
+          data: assets.brandLogo.split(',')[1],
+          mimeType: 'image/jpeg'
+        }
+      });
+    }
+
+    // Adiciona Referência de Estilo
+    if (assets.styleReference) {
+      parts.push({
+        inlineData: {
+          data: assets.styleReference.split(',')[1],
+          mimeType: 'image/jpeg'
+        }
+      });
+    }
+
+    onProgress("Renderizando arte final...");
 
     try {
       const response = await ai.models.generateContent({
@@ -96,10 +116,9 @@ export class GeminiService {
           }
         }
       }
-      throw new Error("Falha na renderização da imagem.");
+      throw new Error("Não foi possível gerar a imagem com os ativos fornecidos.");
     } catch (error: any) {
       console.error("Image Gen Error:", error);
-      if (error.message?.includes("404") || error.message?.includes("not found")) throw new Error("KEY_INVALID");
       throw error;
     }
   }

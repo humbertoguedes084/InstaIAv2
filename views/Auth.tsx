@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
 import { NotificationService } from '../services/notificationService';
 
 interface AuthProps {
-  onAuthSuccess: (email: string) => void;
+  onAuthSuccess: (userId: string, email: string) => void;
   onBack: () => void;
 }
 
@@ -62,16 +62,15 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
               email: cleanEmail
             });
           }
+          
+          setIsPending(false);
+          if (!isMasterAdmin) {
+            setMode('login');
+            setError("Registro concluído! Sua conta está em análise. Avisaremos por e-mail quando for liberada.");
+          } else {
+            onAuthSuccess(data.user.id, cleanEmail);
+          }
         }
-        
-        setIsPending(false);
-        if (cleanEmail !== 'humbertoguedesdev@gmail.com') {
-          setMode('login');
-          setError("Registro concluído! Sua conta está em análise de segurança. Avisaremos por e-mail quando for liberada.");
-        } else {
-          onAuthSuccess(cleanEmail);
-        }
-
       } else {
         const { data, error: signInError } = await supabase.auth.signInWithPassword({
           email: cleanEmail,
@@ -82,40 +81,18 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
           if (signInError.message.toLowerCase().includes("invalid login credentials")) {
             throw new Error("E-mail ou senha incorretos. Tente novamente.");
           }
-          if (signInError.message.toLowerCase().includes("email not confirmed")) {
-            throw new Error("Por favor, confirme seu e-mail antes de acessar.");
-          }
           throw signInError;
         }
         
-        onAuthSuccess(cleanEmail);
+        if (data.user) {
+          onAuthSuccess(data.user.id, cleanEmail);
+        }
       }
     } catch (err: any) {
       setError(err.message || "Não foi possível completar a operação.");
       setIsPending(false);
     }
   };
-
-  if (isPending && mode === 'register') {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-6 animate-in fade-in duration-500">
-        <div className="max-w-md w-full text-center space-y-8">
-          <div className="w-20 h-20 bg-amber-50 rounded-[2.5rem] flex items-center justify-center mx-auto text-amber-500 border-4 border-white shadow-xl shadow-amber-100/50">
-            <ShieldAlert size={40} />
-          </div>
-          <div className="space-y-4">
-            <h2 className="text-3xl font-black text-gray-900 tracking-tighter uppercase">Sincronizando Estúdio</h2>
-            <p className="text-gray-500 font-medium leading-relaxed">
-              Estamos configurando suas ferramentas de IA e enviando um alerta para o administrador Humberto Guedes.
-            </p>
-          </div>
-          <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-             <div className="bg-indigo-600 h-full w-2/3 animate-[progress_2s_ease-in-out_infinite]" />
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 font-sans">
@@ -128,7 +105,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
 
         <div className="bg-white p-8 md:p-10 rounded-[3.5rem] shadow-2xl border border-indigo-50/50 space-y-8">
           {error && (
-            <div className={`p-4 rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-2 ${error.includes("concluído") || error.includes("enviada") ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+            <div className={`p-4 rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-2 ${error.includes("concluído") ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
               <AlertCircle size={18} className="shrink-0" />
               <p className="text-xs font-bold leading-tight">{error}</p>
             </div>
@@ -144,7 +121,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
                   type="text" 
                   placeholder="Nome Completo"
                   required
-                  className="w-full bg-gray-50 border-2 border-gray-100 rounded-[1.4rem] pl-18 pr-6 py-5 font-bold text-sm focus:border-indigo-600 focus:bg-white outline-none transition-all shadow-sm"
+                  className="w-full bg-gray-50 border-2 border-gray-100 rounded-[1.4rem] pl-20 pr-6 py-5 font-bold text-sm focus:border-indigo-600 focus:bg-white outline-none transition-all shadow-sm"
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
                 />
@@ -158,7 +135,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
                 type="email" 
                 placeholder="E-mail"
                 required
-                className="w-full bg-gray-50 border-2 border-gray-100 rounded-[1.4rem] pl-18 pr-6 py-5 font-bold text-sm focus:border-indigo-600 focus:bg-white outline-none transition-all shadow-sm"
+                className="w-full bg-gray-50 border-2 border-gray-100 rounded-[1.4rem] pl-20 pr-6 py-5 font-bold text-sm focus:border-indigo-600 focus:bg-white outline-none transition-all shadow-sm"
                 value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
               />
@@ -171,7 +148,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
                 type={showPassword ? "text" : "password"} 
                 placeholder="Senha"
                 required
-                className="w-full bg-gray-50 border-2 border-gray-100 rounded-[1.4rem] pl-18 pr-14 py-5 font-bold text-sm focus:border-indigo-600 focus:bg-white outline-none transition-all shadow-sm"
+                className="w-full bg-gray-50 border-2 border-gray-100 rounded-[1.4rem] pl-20 pr-14 py-5 font-bold text-sm focus:border-indigo-600 focus:bg-white outline-none transition-all shadow-sm"
                 value={formData.password}
                 onChange={(e) => setFormData({...formData, password: e.target.value})}
               />
@@ -209,7 +186,6 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
         </div>
       </div>
       <style>{`
-        .pl-18 { padding-left: 4.5rem; }
         @keyframes progress {
           0% { transform: translateX(-100%); }
           100% { transform: translateX(200%); }

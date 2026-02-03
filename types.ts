@@ -48,7 +48,6 @@ export interface GeneratedImage {
 
 export interface GenerationConfig {
   nicheId: string;
-  quality: 'STANDARD';
   aspectRatio: '1:1' | '9:16' | '3:4';
   text?: string;
   price?: string;

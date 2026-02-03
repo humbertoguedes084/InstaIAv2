@@ -35,7 +35,6 @@ const App: React.FC = () => {
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          // Se houver erro de refresh token, limpamos o estado local
           if (error.message.includes('refresh_token')) {
             await supabase.auth.signOut();
             localStorage.clear();
@@ -63,6 +62,7 @@ const App: React.FC = () => {
       if (event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
         if (!session) resetAppState();
       } else if (event === 'SIGNED_IN' && session?.user) {
+        // O Auth.tsx já chama fetchUserData em alguns casos, mas aqui garantimos redundância segura
         fetchUserData(session.user.id, session.user.email!);
       }
     });
@@ -86,6 +86,8 @@ const App: React.FC = () => {
   };
 
   const fetchUserData = async (userId: string, email: string) => {
+    if (!userId) return; // Evita chamadas com ID vazio
+
     const cleanEmail = email.toLowerCase().trim();
     const isAdmin = cleanEmail === 'humbertoguedesdev@gmail.com';
     
@@ -98,7 +100,8 @@ const App: React.FC = () => {
 
       if (error || !profile) {
         if (!isAdmin) {
-          resetAppState();
+          // Se não houver perfil ainda (recém criado), não resetamos, apenas esperamos
+          if (loading) setLoading(false);
           return;
         }
       }
@@ -117,36 +120,40 @@ const App: React.FC = () => {
         }
       };
 
-      setCurrentUser(userData);
-      setIsSuperAdmin(isAdmin);
-      setIsAuthenticated(true);
-      
-      if (activeView === 'landing' || activeView === 'login') {
-        setActiveView(isAdmin ? 'admin' : 'dashboard');
+      // Só marcamos como autenticado e redirecionamos se o status for ativo ou se for admin
+      if (userData.status === UserStatus.ACTIVE || isAdmin) {
+        setCurrentUser(userData);
+        setIsSuperAdmin(isAdmin);
+        setIsAuthenticated(true);
+        
+        // Redireciona direto para a página de geração se vier do login/landing
+        if (activeView === 'landing' || activeView === 'login') {
+          setActiveView(isAdmin ? 'admin' : 'generate');
+        }
+
+        const { data: images } = await supabase
+          .from('generated_images')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+
+        setUsage({
+          plan: userData.plan,
+          credits: {
+            weekly: userData.credits.weekly + userData.credits.extra,
+            used: userData.credits.used,
+            resets: 'Semanal'
+          },
+          history: (images || []).map(img => ({
+            id: img.id,
+            url: img.url,
+            caption: img.caption,
+            niche: img.niche,
+            createdAt: img.created_at,
+            config: img.config
+          }))
+        });
       }
-
-      const { data: images } = await supabase
-        .from('generated_images')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-      setUsage({
-        plan: userData.plan,
-        credits: {
-          weekly: userData.credits.weekly + userData.credits.extra,
-          used: userData.credits.used,
-          resets: 'Semanal'
-        },
-        history: (images || []).map(img => ({
-          id: img.id,
-          url: img.url,
-          caption: img.caption,
-          niche: img.niche,
-          createdAt: img.created_at,
-          config: img.config
-        }))
-      });
 
     } catch (err) {
       console.error("Data fetch error:", err);
@@ -206,13 +213,13 @@ const App: React.FC = () => {
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-950 text-white gap-6">
       <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-      <p className="font-black uppercase tracking-widest text-[10px] italic animate-pulse">Autenticando Estúdio...</p>
+      <p className="font-black uppercase tracking-widest text-[10px] italic animate-pulse">Sincronizando Estúdio...</p>
     </div>
   );
 
   const renderView = () => {
     if (!isAuthenticated) {
-      if (activeView === 'login') return <Auth onAuthSuccess={(email) => fetchUserData(currentUser?.id || '', email)} onBack={() => setActiveView('landing')} />;
+      if (activeView === 'login') return <Auth onAuthSuccess={(userId, email) => fetchUserData(userId, email)} onBack={() => setActiveView('landing')} />;
       return <LandingPage onGoToAuth={() => setActiveView('login')} />;
     }
 
@@ -226,7 +233,7 @@ const App: React.FC = () => {
       case 'gallery':
         return <Gallery history={filteredHistory} onDelete={handleDeleteImage} onDownload={triggerDownload} />;
       default:
-        return <Dashboard usage={usage} onGenerate={() => setActiveView('generate')} onDeleteImage={handleDeleteImage} onDownloadImage={triggerDownload} />;
+        return <Generator onSuccess={handleNewImage} usage={usage} onDeleteImage={handleDeleteImage} onDownloadImage={triggerDownload} />;
     }
   };
 
