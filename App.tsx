@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { ArrowRight, Trash2, Download } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './views/Dashboard';
 import Generator from './views/Generator';
@@ -25,49 +24,54 @@ const App: React.FC = () => {
   });
 
   const filteredHistory = useMemo(() => {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    return usage.history.filter(img => new Date(img.createdAt) > sevenDaysAgo);
+    return usage.history;
   }, [usage.history]);
 
   useEffect(() => {
-    // 1. Verifica sessão inicial
-    checkSession();
+    let mounted = true;
 
-    // 2. Configura listener global de autenticação
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth Event:", event);
-      if (event === 'SIGNED_OUT') {
-        resetAppState();
-        setActiveView('landing'); // Redireciona para o menu inicial
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        if (session?.user) {
-          fetchUserData(session.user.id, session.user.email!);
+    const checkInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          // Se houver erro de refresh token, limpamos o estado local
+          if (error.message.includes('refresh_token')) {
+            await supabase.auth.signOut();
+            localStorage.clear();
+          }
+          if (mounted) setLoading(false);
+          return;
         }
+
+        if (session?.user && mounted) {
+          await fetchUserData(session.user.id, session.user.email!);
+        } else if (mounted) {
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error("Auth init failure:", err);
+        if (mounted) setLoading(false);
+      }
+    };
+
+    checkInitialSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+
+      if (event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+        if (!session) resetAppState();
+      } else if (event === 'SIGNED_IN' && session?.user) {
+        fetchUserData(session.user.id, session.user.email!);
       }
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
-
-  const checkSession = async () => {
-    try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) throw sessionError;
-
-      if (session?.user) {
-        await fetchUserData(session.user.id, session.user.email!);
-      } else {
-        setLoading(false);
-      }
-    } catch (err) {
-      console.error("Erro ao verificar sessão:", err);
-      setLoading(false);
-    }
-  };
 
   const resetAppState = () => {
     setIsAuthenticated(false);
@@ -86,53 +90,30 @@ const App: React.FC = () => {
     const isAdmin = cleanEmail === 'humbertoguedesdev@gmail.com';
     
     try {
-      let { data: profile, error } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
-      if (isAdmin) {
-        if (!profile || error || profile.status !== 'ACTIVE') {
-          const { data: repairedProfile } = await supabase
-            .from('profiles')
-            .upsert({
-              id: userId,
-              email: cleanEmail,
-              name: profile?.name || 'Humberto Guedes',
-              status: 'ACTIVE',
-              plan: 'PREMIUM',
-              credits_weekly: 9999,
-              credits_used: profile?.credits_used || 0
-            })
-            .select()
-            .single();
-          profile = repairedProfile;
+      if (error || !profile) {
+        if (!isAdmin) {
+          resetAppState();
+          return;
         }
-      }
-
-      if (!profile && !isAdmin) {
-        await handleSignOut(false);
-        return;
-      }
-
-      if (!isAdmin && profile?.status !== 'ACTIVE') {
-        alert("Acesso Restrito: Sua conta está em fase de aprovação.");
-        await handleSignOut(false);
-        return;
       }
 
       const userData: UserAccount = {
         id: userId,
         email: cleanEmail,
-        name: profile?.name || (isAdmin ? 'Humberto Guedes' : 'Usuário'),
-        plan: (profile?.plan as PlanType) || PlanType.BASIC,
+        name: profile?.name || (isAdmin ? 'Humberto Admin' : 'Usuário'),
+        plan: (profile?.plan as PlanType) || (isAdmin ? PlanType.PREMIUM : PlanType.BASIC),
         status: (profile?.status as UserStatus) || UserStatus.ACTIVE,
         joinedAt: profile?.created_at || new Date().toISOString(),
         credits: {
-          weekly: profile?.credits_weekly || (isAdmin ? 9999 : 0),
-          used: profile?.credits_used || 0,
-          extra: profile?.credits_extra || 0
+          weekly: profile?.credits_weekly ?? (isAdmin ? 9999 : 0),
+          used: profile?.credits_used ?? 0,
+          extra: profile?.credits_extra ?? 0
         }
       };
 
@@ -168,58 +149,33 @@ const App: React.FC = () => {
       });
 
     } catch (err) {
-      console.error("Erro ao carregar dados:", err);
+      console.error("Data fetch error:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLoginSuccess = async () => {
+  const handleSignOut = async () => {
     setLoading(true);
-    await checkSession();
-  };
-
-  const handleSignOut = async (confirm = true) => {
-    if (confirm && !window.confirm("Deseja realmente sair do sistema?")) return;
-    
-    // Limpeza de estado imediata para feedback visual
+    await supabase.auth.signOut();
+    localStorage.clear();
     resetAppState();
     setActiveView('landing');
-    
-    try {
-      // Força a saída no Supabase
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      // Limpa storage local por precaução
-      localStorage.clear();
-      sessionStorage.clear();
-    } catch (err) {
-      console.error("Erro ao sair:", err);
-      // Se falhar, forçamos um reload total para garantir que a sessão morra
-      window.location.href = '/'; 
-    }
   };
 
   const handleNewImage = async (img: GeneratedImage) => {
     if (!currentUser) return;
 
-    const { error: imgError } = await supabase
-      .from('generated_images')
-      .insert({
-        id: img.id,
-        user_id: currentUser.id,
-        url: img.url,
-        caption: img.caption,
-        niche: img.niche,
-        config: img.config
-      });
+    await supabase.from('generated_images').insert({
+      id: img.id,
+      user_id: currentUser.id,
+      url: img.url,
+      caption: img.caption,
+      niche: img.niche,
+      config: img.config
+    });
 
-    if (imgError) return;
-
-    const cost = 1;
-    const newUsedCredits = usage.credits.used + cost;
-    
+    const newUsedCredits = usage.credits.used + 1;
     await supabase.from('profiles').update({ credits_used: newUsedCredits }).eq('id', currentUser.id);
 
     setUsage(prev => ({
@@ -227,12 +183,10 @@ const App: React.FC = () => {
       history: [img, ...prev.history],
       credits: { ...prev.credits, used: newUsedCredits }
     }));
-
-    setCurrentUser(prev => prev ? { ...prev, credits: { ...prev.credits, used: newUsedCredits } } : null);
   };
 
   const handleDeleteImage = async (id: string) => {
-    if (window.confirm("Confirmar exclusão desta arte?")) {
+    if (window.confirm("Apagar esta arte?")) {
       const { error } = await supabase.from('generated_images').delete().eq('id', id);
       if (!error) {
         setUsage(prev => ({ ...prev, history: prev.history.filter(img => img.id !== id) }));
@@ -252,32 +206,27 @@ const App: React.FC = () => {
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-950 text-white gap-6">
       <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-      <div className="text-center space-y-2">
-        <p className="font-black uppercase tracking-[0.5em] text-xs italic animate-pulse">AUTENTICANDO ACESSO...</p>
-        <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Verificando credenciais de segurança</p>
-      </div>
+      <p className="font-black uppercase tracking-widest text-[10px] italic animate-pulse">Autenticando Estúdio...</p>
     </div>
   );
 
   const renderView = () => {
     if (!isAuthenticated) {
-      if (activeView === 'login') return <Auth onAuthSuccess={handleLoginSuccess} onBack={() => setActiveView('landing')} />;
+      if (activeView === 'login') return <Auth onAuthSuccess={(email) => fetchUserData(currentUser?.id || '', email)} onBack={() => setActiveView('landing')} />;
       return <LandingPage onGoToAuth={() => setActiveView('login')} />;
     }
 
-    const usageWithFilteredHistory = { ...usage, history: filteredHistory };
-
     switch (activeView) {
       case 'dashboard':
-        return <Dashboard usage={usageWithFilteredHistory} onGenerate={() => setActiveView('generate')} onDeleteImage={handleDeleteImage} onDownloadImage={triggerDownload} />;
+        return <Dashboard usage={usage} onGenerate={() => setActiveView('generate')} onDeleteImage={handleDeleteImage} onDownloadImage={triggerDownload} />;
       case 'generate':
-        return <Generator onSuccess={handleNewImage} usage={usageWithFilteredHistory} onDeleteImage={handleDeleteImage} onDownloadImage={triggerDownload} />;
+        return <Generator onSuccess={handleNewImage} usage={usage} onDeleteImage={handleDeleteImage} onDownloadImage={triggerDownload} />;
       case 'admin':
         return <SuperAdmin />;
       case 'gallery':
         return <Gallery history={filteredHistory} onDelete={handleDeleteImage} onDownload={triggerDownload} />;
       default:
-        return <Dashboard usage={usageWithFilteredHistory} onGenerate={() => setActiveView('generate')} onDeleteImage={handleDeleteImage} onDownloadImage={triggerDownload} />;
+        return <Dashboard usage={usage} onGenerate={() => setActiveView('generate')} onDeleteImage={handleDeleteImage} onDownloadImage={triggerDownload} />;
     }
   };
 
@@ -285,7 +234,7 @@ const App: React.FC = () => {
     <div className={`min-h-screen ${isSuperAdmin && activeView === 'admin' ? 'bg-gray-950' : 'bg-gray-50'}`}>
       <div className="flex flex-col md:flex-row min-h-screen">
         {isAuthenticated && (
-          <Sidebar activeView={activeView} setActiveView={setActiveView} isAdmin={isSuperAdmin} userName={currentUser?.name} onSignOut={() => handleSignOut(true)} />
+          <Sidebar activeView={activeView} setActiveView={setActiveView} isAdmin={isSuperAdmin} userName={currentUser?.name} onSignOut={handleSignOut} />
         )}
         <main className="flex-1 overflow-x-hidden">{renderView()}</main>
       </div>

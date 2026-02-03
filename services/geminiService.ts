@@ -4,67 +4,41 @@ import { Niche, GenerationConfig, AssetUploads } from '../types';
 
 export class GeminiService {
   /**
-   * Obtém a chave de forma segura. 
-   * No Netlify, as variáveis precisam ser coladas nos campos 'Production', 'Deploy Previews' e 'Branch Deploys'.
+   * Tenta capturar a chave. No Netlify, se não estiver prefixada ou injetada no build,
+   * retornará undefined, o que disparará a tela de seleção de chave no Generator.tsx.
    */
-  private static getApiKey(): string {
-    let key: any;
-    
-    try {
-      // Tenta ler do process.env (padrão solicitado e injetado pelo Netlify/Vite)
-      key = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : undefined;
-    } catch (e) {
-      key = undefined;
-    }
-
-    // Limpeza de segurança (remove espaços que podem vir ao colar)
-    if (typeof key === 'string') {
-      key = key.trim();
-    }
-
-    // Validação rigorosa
-    if (!key || key === 'undefined' || key === 'null' || key === '') {
-      throw new Error(
-        "🚨 CONFIGURAÇÃO PENDENTE: Sua API_KEY não foi detectada.\n\n" +
-        "Como as caixas no Netlify são digitáveis, siga este ajuste:\n" +
-        "1. No painel de Variáveis do Netlify, clique em 'Options' > 'Edit' na API_KEY.\n" +
-        "2. COPIE e COLE sua chave (AIzaSy...) nos 3 campos de texto:\n" +
-        "   - Production\n" +
-        "   - Deploy previews (Importante para links de teste!)\n" +
-        "   - Branch deploys\n" +
-        "3. Clique em SAVE.\n" +
-        "4. Vá em 'Deploys' > 'Trigger deploy' > 'Clear cache and deploy site'."
-      );
-    }
-
-    return key;
+  private static getApiKey(): string | undefined {
+    return process.env.API_KEY;
   }
 
-  static async generateCaption(niche: Niche, config: GenerationConfig): Promise<string> {
+  static async generateSmartCaption(niche: Niche, config: GenerationConfig): Promise<{text: string, sources: any[]}> {
+    const apiKey = this.getApiKey();
+    if (!apiKey) throw new Error("KEY_MISSING");
+
     try {
-      const ai = new GoogleGenAI({ apiKey: this.getApiKey() });
-      
+      const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: `
-          Você é um especialista em Social Media Marketing e Copywriting para Instagram.
-          Escreva uma legenda altamente persuasiva para um post de ${niche.name}.
-          
-          Diretrizes:
-          - Use o framework AIDA (Atenção, Interesse, Desejo, Ação).
-          - Inclua Emojis relevantes.
-          - ${config.price ? `O preço é ${config.price}.` : ''}
-          - ${config.text ? `Contexto adicional: ${config.text}` : ''}
-          - Adicione 5 hashtags estratégicas no final.
-          - Tom de voz: Profissional, desejável e urgente.
-          - Idioma: Português do Brasil.
+          Você é um especialista em marketing para o nicho de ${niche.name}.
+          Crie uma legenda estratégica para o Instagram sobre: ${config.text || niche.description}.
+          Inclua: Gatilhos mentais, Emojis e Hashtags.
+          Idioma: Português do Brasil.
         `.trim(),
+        config: {
+          tools: [{ googleSearch: {} }]
+        }
       });
-      return response.text || '';
+
+      const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+      return { 
+        text: response.text || '', 
+        sources 
+      };
     } catch (error: any) {
-      console.error("Erro ao gerar legenda:", error);
-      if (error.message.includes("CONFIGURAÇÃO PENDENTE")) throw error;
-      return "Confira nossa novidade incrível! 🚀 #marketing #estilo";
+      console.error("Erro na legenda:", error);
+      if (error.message?.includes("API key") || error.message?.includes("not found")) throw new Error("KEY_INVALID");
+      throw error;
     }
   }
 
@@ -75,35 +49,21 @@ export class GeminiService {
     onProgress: (msg: string) => void
   ): Promise<string> {
     const apiKey = this.getApiKey();
+    if (!apiKey) throw new Error("KEY_MISSING");
+
     const ai = new GoogleGenAI({ apiKey });
-
-    onProgress("Sincronizando diretrizes criativas...");
-    await new Promise(r => setTimeout(r, 600));
+    onProgress("Configurando iluminação e contexto...");
     
-    onProgress(`Interpretando nicho: ${niche.name}...`);
-    await new Promise(r => setTimeout(r, 600));
-
+    // Modelos oficiais conforme diretrizes
+    const modelName = config.quality === 'STANDARD' ? 'gemini-2.5-flash-image' : 'gemini-3-pro-image-preview';
+    
     const prompt = `
-      ROLE: You are an Elite Advertising Agency Creative Director.
-      OBJECTIVE: Generate a professional commercial campaign image that strictly adheres to the user's specifications.
-
-      USER'S MANDATORY CAMPAIGN DETAILS (CRITICAL):
-      ${config.price ? `- PRODUCT PRICE: "${config.price}". You MUST integrate this price into the image using professional typography.` : '- NO PRICE: Do not include a price unless specified.'}
-      ${config.text ? `- CREATIVE DIRECTION / CUSTOM PROMPT: "${config.text}". Implement every detail mentioned here.` : ''}
-
-      MARKETING STANDARDS:
-      - Niche: ${niche.name}.
-      - Atmosphere: ${niche.context.atmosphere}.
-      - Lighting: ${niche.context.lighting}.
-      - Composition: ${niche.context.composition}.
-      - Aspect Ratio: ${config.aspectRatio}.
-
-      ASSET INTEGRATION:
-      ${assets.productPhoto ? '1. PRODUCT PHOTO PROVIDED: Integrate it seamlessly.' : '1. NO PRODUCT PHOTO: Generate a flagship premium product for this niche.'}
-      ${assets.brandLogo ? '2. LOGO PROVIDED: Incorporate professionally.' : ''}
-      ${assets.styleReference ? '3. STYLE REFERENCE PROVIDED: Mimic this artistic mood exactly.' : ''}
-
-      FINAL DIRECTIVE: Create a finished, ready-to-post Instagram advertisement.
+      High-end professional Instagram advertisement for ${niche.name}.
+      Description: ${config.text || 'premium product lifestyle'}.
+      Atmosphere: ${niche.context.atmosphere}.
+      Lighting: ${niche.context.lighting}.
+      Colors: ${niche.context.colors}.
+      Cinematic, 8k, commercial photography style.
     `.trim();
 
     const parts: any[] = [{ text: prompt }];
@@ -117,48 +77,30 @@ export class GeminiService {
       });
     }
 
-    if (assets.brandLogo) {
-      parts.push({
-        inlineData: {
-          data: assets.brandLogo.split(',')[1],
-          mimeType: 'image/png'
-        }
-      });
-    }
-
-    if (assets.styleReference) {
-      parts.push({
-        inlineData: {
-          data: assets.styleReference.split(',')[1],
-          mimeType: 'image/jpeg'
-        }
-      });
-    }
-
-    onProgress("Renderizando pixels publicitários...");
+    onProgress("Renderizando arte final...");
 
     try {
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image',
+        model: modelName,
         contents: { parts },
         config: {
           imageConfig: {
-            aspectRatio: config.aspectRatio
+            aspectRatio: config.aspectRatio as any
           }
         }
       });
 
-      const candidates = response.candidates;
-      if (candidates && candidates.length > 0 && candidates[0].content?.parts) {
-        for (const part of candidates[0].content.parts) {
+      if (response.candidates && response.candidates[0].content.parts) {
+        for (const part of response.candidates[0].content.parts) {
           if (part.inlineData) {
             return `data:image/png;base64,${part.inlineData.data}`;
           }
         }
       }
-      throw new Error("A IA não conseguiu renderizar a imagem.");
+      throw new Error("A IA não gerou uma imagem. Tente mudar o texto.");
     } catch (error: any) {
-      console.error("Erro na geração de imagem:", error);
+      console.error("Erro na imagem:", error);
+      if (error.message?.includes("API key") || error.message?.includes("not found")) throw new Error("KEY_INVALID");
       throw error;
     }
   }
