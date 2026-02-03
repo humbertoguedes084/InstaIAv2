@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Sparkles, Download, Trash2, Key, Info, ExternalLink, RefreshCw, Globe, Link as LinkIcon, ShieldCheck, 
-  Image as ImageIcon, Upload, Camera, Tag, X, FileImage, AlertCircle, RefreshCcw
+  Image as ImageIcon, Upload, Camera, Tag, X, FileImage, AlertCircle, RefreshCcw, HelpCircle, Copy, CheckCircle2,
+  Lightbulb, Target, CameraIcon, Layers, User as UserIcon, Home as HomeIcon, BookOpen
 } from 'lucide-react';
 import { NICHES } from '../constants';
 import { Niche, AssetUploads, GenerationConfig, GeneratedImage, UserUsage } from '../types';
@@ -31,6 +32,8 @@ const Generator: React.FC<GeneratorProps> = ({ onSuccess, usage, onDeleteImage, 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [generatedResult, setGeneratedResult] = useState<{url: string, caption: string, sources: any[]} | null>(null);
   const [needsKeySelection, setNeedsKeySelection] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   
   const [selectedNiche, setSelectedNiche] = useState<Niche>(NICHES[0]);
   const [assets, setAssets] = useState<AssetUploads>({
@@ -63,6 +66,12 @@ const Generator: React.FC<GeneratorProps> = ({ onSuccess, usage, onDeleteImage, 
     };
     checkKeyStatus();
   }, []);
+
+  const handleCopyPrompt = (text: string, index: number) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2000);
+  };
 
   const handleFileChange = (type: keyof AssetUploads, file: File | null) => {
     if (!file) {
@@ -111,6 +120,125 @@ const Generator: React.FC<GeneratorProps> = ({ onSuccess, usage, onDeleteImage, 
     }
   };
 
+  const HelpGuide = () => (
+    <div className={`fixed inset-0 z-[60] flex items-end md:items-center justify-center p-0 md:p-6 transition-all duration-500 ${showHelp ? 'visible bg-black/60 backdrop-blur-sm' : 'invisible pointer-events-none bg-transparent'}`}>
+      <div className={`w-full max-w-4xl max-h-[90vh] bg-white rounded-t-[3rem] md:rounded-[3.5rem] overflow-hidden flex flex-col transition-all duration-500 transform ${showHelp ? 'translate-y-0 scale-100' : 'translate-y-full md:scale-90'}`}>
+        <div className="p-8 border-b flex justify-between items-center bg-gray-50/50">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg"><Lightbulb size={24} /></div>
+            <div>
+              <h2 className="text-2xl font-black uppercase tracking-tighter italic">Guia de Prompts Profissionais</h2>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Crie scripts que convertem em vendas</p>
+            </div>
+          </div>
+          <button onClick={() => setShowHelp(false)} className="w-12 h-12 bg-white border border-gray-100 rounded-2xl flex items-center justify-center text-gray-400 hover:text-gray-900 transition-colors shadow-sm">
+            <X size={24} />
+          </button>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto p-8 space-y-10 custom-scrollbar">
+          <div className="bg-indigo-50 border-2 border-indigo-100 p-6 rounded-[2rem] space-y-2">
+            <p className="text-indigo-900 font-bold leading-relaxed italic text-sm">"Não sabe o que escrever? Use nossos modelos para garantir o melhor resultado de agência."</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Seção 1 */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3"><div className="w-8 h-8 bg-gray-950 text-white rounded-lg flex items-center justify-center text-xs font-black italic">1</div><h3 className="font-black uppercase tracking-tighter text-gray-900">Fidelidade Visual</h3></div>
+              <p className="text-xs text-gray-500 font-medium">Use quando quiser manter o estilo da referência e mudar apenas detalhes.</p>
+              <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
+                <p className="text-[10px] font-black uppercase text-gray-400">Script Recomendado:</p>
+                <code className="block text-xs font-bold text-indigo-600 leading-relaxed italic">"Crie uma arte para [SEU OBJETO], mantendo a mesma paleta de cores, iluminação e composição da referência, alterando apenas [O QUE MUDAR]."</code>
+                <button onClick={() => handleCopyPrompt('Crie uma arte para [SEU OBJETO], mantendo a mesma paleta de cores, iluminação e composição da referência, alterando apenas [O QUE MUDAR].', 1)} className="w-full py-3 bg-white border border-indigo-100 rounded-xl font-black text-[9px] uppercase tracking-widest text-indigo-600 flex items-center justify-center gap-2 hover:bg-indigo-600 hover:text-white transition-all">
+                  {copiedIndex === 1 ? <CheckCircle2 size={12} /> : <Copy size={12} />} {copiedIndex === 1 ? 'Copiado!' : 'Copiar Modelo'}
+                </button>
+              </div>
+            </div>
+
+            {/* Seção 2 */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3"><div className="w-8 h-8 bg-gray-950 text-white rounded-lg flex items-center justify-center text-xs font-black italic">2</div><h3 className="font-black uppercase tracking-tighter text-gray-900">Anúncios & Vendas</h3></div>
+              <p className="text-xs text-gray-500 font-medium">Ideal para veículos, imóveis e produtos físicos.</p>
+              <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
+                <p className="text-[10px] font-black uppercase text-gray-400">Script Recomendado:</p>
+                <code className="block text-xs font-bold text-indigo-600 leading-relaxed italic">"Aja como uma agência de publicidade. Crie um anúncio de alto padrão visual, persuasivo e focado em vendas, utilizando a imagem do [PRODUTO] anexada."</code>
+                <button onClick={() => handleCopyPrompt('Aja como uma agência de publicidade. Crie um anúncio de alto padrão visual, persuasivo e focado em vendas, utilizando a imagem do [PRODUTO] anexada.', 2)} className="w-full py-3 bg-white border border-indigo-100 rounded-xl font-black text-[9px] uppercase tracking-widest text-indigo-600 flex items-center justify-center gap-2 hover:bg-indigo-600 hover:text-white transition-all">
+                  {copiedIndex === 2 ? <CheckCircle2 size={12} /> : <Copy size={12} />} {copiedIndex === 2 ? 'Copiado!' : 'Copiar Modelo'}
+                </button>
+              </div>
+            </div>
+
+            {/* Dicas Avançadas */}
+            <div className="col-span-full bg-gray-950 p-10 rounded-[3rem] text-white space-y-8">
+              <div className="flex items-center gap-4 border-b border-white/10 pb-6"><Target size={24} className="text-indigo-400" /><h3 className="text-xl font-black uppercase tracking-tighter italic">🚀 Dicas de Direção de Arte</h3></div>
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="space-y-2">
+                  <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest flex items-center gap-2"><ImageIcon size={14}/> Luz de Estúdio</h4>
+                  <p className="text-xs text-gray-400 font-medium italic">"Iluminação cinematográfica", "Golden Hour (pôr do sol)" ou "Luz de estúdio suave".</p>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest flex items-center gap-2"><Layers size={14}/> Texturas</h4>
+                  <p className="text-xs text-gray-400 font-medium italic">"Textura de couro", "Metal escovado" ou "Pele ultra realista".</p>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest flex items-center gap-2"><CameraIcon size={14}/> Ângulos</h4>
+                  <p className="text-xs text-gray-400 font-medium italic">"Vista de drone (topo)", "Close-up macro" ou "Lente grande angular".</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Novas Seções */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3"><div className="w-8 h-8 bg-gray-950 text-white rounded-lg flex items-center justify-center text-xs font-black italic">3</div><h3 className="font-black uppercase tracking-tighter text-gray-900">Retratos & Moda</h3></div>
+              <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
+                <code className="block text-xs font-bold text-indigo-600 italic">"Mantenha a identidade e pose da pessoa na referência, mas altere o estilo de roupa para [TRAJE] e o cenário para [LUGAR]."</code>
+                <button onClick={() => handleCopyPrompt('Mantenha a identidade e pose da pessoa na referência, mas altere o estilo de roupa para [TRAJE] e o cenário para [LUGAR].', 3)} className="w-full py-3 bg-white border border-indigo-100 rounded-xl font-black text-[9px] uppercase tracking-widest text-indigo-600 flex items-center justify-center gap-2">
+                   <Copy size={12} /> Copiar Script
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center gap-3"><div className="w-8 h-8 bg-gray-950 text-white rounded-lg flex items-center justify-center text-xs font-black italic">4</div><h3 className="font-black uppercase tracking-tighter text-gray-900">Transformação de Ambiente</h3></div>
+              <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-4">
+                <code className="block text-xs font-bold text-indigo-600 italic">"Usando a foto do ambiente anexado, redesenhe-o no estilo [ESTILO]. Altere móveis, cores e luz, mantendo a estrutura básica."</code>
+                <button onClick={() => handleCopyPrompt('Usando a foto do ambiente anexado, redesenhe-o no estilo [ESTILO]. Altere móveis, cores e luz, mantendo a estrutura básica.', 4)} className="w-full py-3 bg-white border border-indigo-100 rounded-xl font-black text-[9px] uppercase tracking-widest text-indigo-600 flex items-center justify-center gap-2">
+                   <Copy size={12} /> Copiar Script
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-8 bg-gray-50 border-t">
+          <button onClick={() => setShowHelp(false)} className="w-full py-5 bg-gray-950 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-indigo-600 transition-all">Entendi, vamos criar!</button>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (needsKeySelection && !isGenerating) {
+    return (
+      <div className="p-6 md:p-12 max-w-xl mx-auto animate-in zoom-in-95 duration-500">
+        <div className="bg-white border-2 border-indigo-50 p-10 md:p-14 rounded-[3.5rem] text-center space-y-10 shadow-2xl">
+          <div className="w-24 h-24 bg-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto text-white shadow-xl rotate-3">
+            <Key size={48} />
+          </div>
+          <div className="space-y-4">
+            <h2 className="text-3xl font-black uppercase tracking-tighter text-gray-900 italic">Conectar Estúdio</h2>
+            <p className="text-sm text-gray-500 font-bold leading-relaxed max-w-xs mx-auto">Ative o motor de inteligência artificial para começar suas criações.</p>
+          </div>
+          <button 
+            onClick={async () => { await window.aistudio?.openSelectKey(); setNeedsKeySelection(false); }} 
+            className="w-full py-6 bg-gray-950 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-3"
+          >
+            <ShieldCheck size={20} className="text-indigo-400" /> Ativar Agora
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const AssetUploader = ({ label, type, icon: Icon, value, optional }: { label: string, type: keyof AssetUploads, icon: any, value: string | null, optional?: boolean }) => (
     <div className="space-y-3">
       <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest flex items-center justify-between">
@@ -144,30 +272,10 @@ const Generator: React.FC<GeneratorProps> = ({ onSuccess, usage, onDeleteImage, 
     </div>
   );
 
-  if (needsKeySelection && !isGenerating) {
-    return (
-      <div className="p-6 md:p-12 max-w-xl mx-auto animate-in zoom-in-95 duration-500">
-        <div className="bg-white border-2 border-indigo-50 p-10 md:p-14 rounded-[3.5rem] text-center space-y-10 shadow-2xl">
-          <div className="w-24 h-24 bg-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto text-white shadow-xl rotate-3">
-            <Key size={48} />
-          </div>
-          <div className="space-y-4">
-            <h2 className="text-3xl font-black uppercase tracking-tighter text-gray-900 italic">Conectar Estúdio</h2>
-            <p className="text-sm text-gray-500 font-bold leading-relaxed max-w-xs mx-auto">Ative o motor de inteligência artificial para começar suas criações.</p>
-          </div>
-          <button 
-            onClick={async () => { await window.aistudio?.openSelectKey(); setNeedsKeySelection(false); }} 
-            className="w-full py-6 bg-gray-950 text-white rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-3"
-          >
-            <ShieldCheck size={20} className="text-indigo-400" /> Ativar Agora
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-white min-h-screen pb-32">
+      <HelpGuide />
+      
       <div className="sticky top-0 bg-white/95 backdrop-blur-md z-40 border-b px-6 py-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
            <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg">I</div>
@@ -184,11 +292,11 @@ const Generator: React.FC<GeneratorProps> = ({ onSuccess, usage, onDeleteImage, 
           <div className="bg-red-50 border-2 border-red-100 p-6 rounded-[2rem] flex flex-col items-center text-center gap-4 animate-in slide-in-from-top-4">
             <div className="w-12 h-12 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center"><AlertCircle size={24} /></div>
             <div className="space-y-1">
-              <h4 className="text-sm font-black text-red-900 uppercase tracking-tighter italic">Ops! Algo deu errado</h4>
+              <h4 className="text-sm font-black text-red-900 uppercase tracking-tighter italic">Diagnóstico de Renderização</h4>
               <p className="text-xs text-red-600 font-bold leading-relaxed">{errorMsg}</p>
             </div>
-            <button onClick={() => setErrorMsg(null)} className="text-[10px] font-black text-red-400 uppercase tracking-widest hover:text-red-900 flex items-center gap-2">
-              <RefreshCcw size={12} /> Tentar com novo Script
+            <button onClick={() => { setErrorMsg(null); setShowHelp(true); }} className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:text-indigo-900 flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-red-100 shadow-sm">
+              <BookOpen size={12} /> Abrir Guia de Scripts
             </button>
           </div>
         )}
@@ -241,7 +349,12 @@ const Generator: React.FC<GeneratorProps> = ({ onSuccess, usage, onDeleteImage, 
             {/* Prompt */}
             <div className="space-y-6">
               <div className="space-y-4">
-                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">3. Direcionamento Criativo</label>
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest">3. Direcionamento Criativo</label>
+                  <button onClick={() => setShowHelp(true)} className="flex items-center gap-2 text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:text-indigo-900 transition-colors bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-100">
+                    <HelpCircle size={12} /> Ajuda para gerar imagem
+                  </button>
+                </div>
                 <textarea 
                   placeholder="Ex: 'Garrafa em um bloco de gelo com luz neon azul'..." 
                   className="w-full bg-gray-50 border-2 border-gray-100 rounded-[2rem] px-8 py-8 font-bold text-sm outline-none min-h-[160px] focus:border-indigo-600 focus:bg-white transition-all shadow-inner" 
