@@ -42,7 +42,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
         if (data.user) {
           const isMasterAdmin = cleanEmail === 'humbertoguedesdev@gmail.com';
           
-          // Novos usuários iniciam com 0 créditos semanais (credits_weekly: 0)
+          // Criar perfil com créditos zerados conforme regra de negócio
           const { error: profileError } = await supabase
             .from('profiles')
             .upsert({
@@ -57,6 +57,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
 
           if (profileError) console.error("Erro ao configurar perfil:", profileError);
 
+          // DISPARO DO ALERTA PARA O ADMINISTRADOR
           if (!isMasterAdmin) {
             await NotificationService.sendAdminNotification({
               name: formData.name,
@@ -67,7 +68,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
           setIsPending(false);
           if (!isMasterAdmin) {
             setMode('login');
-            setError("Registro concluído! Sua conta está em análise. Você inicia com 0 créditos. Após a aprovação, seu saldo será liberado conforme sua compra.");
+            setError("CADASTRO RECEBIDO! 🚀 Nossa equipe está validando sua conta. Você iniciará com 0 créditos. Assim que seu acesso for aprovado pelo administrador, o saldo do seu plano será liberado automaticamente.");
           } else {
             onAuthSuccess(data.user.id, cleanEmail);
           }
@@ -106,7 +107,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
 
         <div className="bg-white p-8 md:p-10 rounded-[3.5rem] shadow-2xl border border-indigo-50/50 space-y-8">
           {error && (
-            <div className={`p-4 rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-2 ${error.includes("concluído") ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+            <div className={`p-4 rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-2 ${error.includes("RECEBIDO") ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-red-50 text-red-600'}`}>
               <AlertCircle size={18} className="shrink-0" />
               <p className="text-xs font-bold leading-tight">{error}</p>
             </div>
@@ -179,7 +180,7 @@ const Auth: React.FC<AuthProps> = ({ onAuthSuccess, onBack }) => {
               onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(null); }} 
               className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-indigo-600 transition-colors"
             >
-              {mode === 'login' ? 'Novo por aqui? Criar conta de teste' : 'Já possui acesso? Fazer Login'}
+              {mode === 'login' ? 'Novo por aqui? Solicitar acesso' : 'Já possui acesso? Fazer Login'}
             </button>
             <div className="h-px bg-gray-100 w-1/4 mx-auto" />
             <button onClick={onBack} className="text-[9px] font-black text-gray-300 uppercase tracking-widest hover:text-gray-900 transition-colors">← Voltar ao Início</button>

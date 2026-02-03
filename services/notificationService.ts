@@ -3,13 +3,12 @@ export class NotificationService {
   private static ADMIN_EMAIL = 'humbertoguedesdev@gmail.com';
 
   /**
-   * Envia uma notificação de novo usuário para o administrador.
-   * Utiliza o Formspree como relay gratuito e confiável para e-mail via frontend.
+   * Envia uma notificação de alta prioridade para o administrador.
+   * Configurado para disparar um alerta visualmente rico no e-mail do admin.
    */
   static async sendAdminNotification(userData: { name: string; email: string }) {
     try {
-      // Usando o endpoint de integração direta do Formspree (substitua pelo seu ID se desejar persistência no painel deles)
-      // Por padrão, o Formspree permite enviar para o e-mail configurado na conta.
+      // Usando o endpoint Formspree configurado pelo usuário
       const response = await fetch('https://formspree.io/f/mqakpzzq', {
         method: 'POST',
         headers: {
@@ -17,21 +16,34 @@ export class NotificationService {
           'Accept': 'application/json'
         },
         body: JSON.stringify({
-          subject: '🚀 NOVO CADASTRO: Insta.IA Marketing Pro',
-          admin_target: this.ADMIN_EMAIL,
-          message: `Um novo usuário acaba de se cadastrar na plataforma!`,
-          user_name: userData.name,
-          user_email: userData.email,
-          timestamp: new Date().toLocaleString('pt-BR'),
-          action: 'Verifique o painel administrativo para aprovação.'
+          _subject: `🚀 NOVO CADASTRO: ${userData.name.toUpperCase()}`,
+          _to: this.ADMIN_EMAIL,
+          prioridade: 'URGENTE',
+          origem: 'Insta.IA Marketing Pro - Onboarding',
+          mensagem: `Um novo usuário acaba de solicitar acesso ao estúdio de renderização.`,
+          dados_do_lead: {
+            nome: userData.name,
+            email: userData.email,
+            plataforma: 'Insta.IA Marketing Pro',
+            data_hora: new Date().toLocaleString('pt-BR')
+          },
+          proximo_passo: 'Acesse a "Torre de Comando" para validar os créditos deste usuário.',
+          painel_admin: 'https://insta-ia-marketing-pro.vercel.app/admin'
         })
       });
 
       if (!response.ok) {
-        console.warn('Falha silenciosa na notificação de admin.');
+        console.warn('Alerta Admin: Formspree retornou erro. Verifique a quota ou conexão.');
       }
     } catch (error) {
-      console.error('Erro ao enviar alerta de admin:', error);
+      console.error('Erro ao disparar alerta de administrador:', error);
     }
+  }
+
+  /**
+   * Mock para e-mails de marketing/confirmação direta
+   */
+  static async sendUserWelcome(userEmail: string) {
+    console.log(`Pipeline de boas-vindas iniciado para: ${userEmail}`);
   }
 }
