@@ -30,26 +30,25 @@ const App: React.FC = () => {
   useEffect(() => {
     let mounted = true;
 
+    // Fail-safe: Força o desligamento do loading após 2.5s caso o Supabase demore
+    const timeout = setTimeout(() => {
+      if (mounted && loading) {
+        console.warn("Auth Timeout: Carregando interface padrão.");
+        setLoading(false);
+      }
+    }, 2500);
+
     const checkInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (error) {
-          if (error.message.includes('refresh_token')) {
-            await supabase.auth.signOut();
-            localStorage.clear();
-          }
-          if (mounted) setLoading(false);
-          return;
-        }
-
         if (session?.user && mounted) {
           await fetchUserData(session.user.id, session.user.email!);
         } else if (mounted) {
           setLoading(false);
         }
       } catch (err) {
-        console.error("Auth init failure:", err);
+        console.error("Erro na inicialização da Auth:", err);
         if (mounted) setLoading(false);
       }
     };
@@ -58,17 +57,16 @@ const App: React.FC = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
-
-      if (event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
-        if (!session) resetAppState();
+      if (event === 'SIGNED_OUT') {
+        resetAppState();
       } else if (event === 'SIGNED_IN' && session?.user) {
-        // O Auth.tsx já chama fetchUserData em alguns casos, mas aqui garantimos redundância segura
         fetchUserData(session.user.id, session.user.email!);
       }
     });
 
     return () => {
       mounted = false;
+      clearTimeout(timeout);
       subscription.unsubscribe();
     };
   }, []);
@@ -86,30 +84,21 @@ const App: React.FC = () => {
   };
 
   const fetchUserData = async (userId: string, email: string) => {
-    if (!userId) return; // Evita chamadas com ID vazio
-
+    if (!userId) return;
     const cleanEmail = email.toLowerCase().trim();
     const isAdmin = cleanEmail === 'humbertoguedesdev@gmail.com';
     
     try {
-      const { data: profile, error } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
 
-      if (error || !profile) {
-        if (!isAdmin) {
-          // Se não houver perfil ainda (recém criado), não resetamos, apenas esperamos
-          if (loading) setLoading(false);
-          return;
-        }
-      }
-
       const userData: UserAccount = {
         id: userId,
         email: cleanEmail,
-        name: profile?.name || (isAdmin ? 'Humberto Admin' : 'Usuário'),
+        name: profile?.name || (isAdmin ? 'Admin Master' : 'Usuário Insta.IA'),
         plan: (profile?.plan as PlanType) || (isAdmin ? PlanType.PREMIUM : PlanType.BASIC),
         status: (profile?.status as UserStatus) || UserStatus.ACTIVE,
         joinedAt: profile?.created_at || new Date().toISOString(),
@@ -120,43 +109,38 @@ const App: React.FC = () => {
         }
       };
 
-      // Só marcamos como autenticado e redirecionamos se o status for ativo ou se for admin
-      if (userData.status === UserStatus.ACTIVE || isAdmin) {
-        setCurrentUser(userData);
-        setIsSuperAdmin(isAdmin);
-        setIsAuthenticated(true);
-        
-        // Redireciona direto para a página de geração se vier do login/landing
-        if (activeView === 'landing' || activeView === 'login') {
-          setActiveView(isAdmin ? 'admin' : 'generate');
-        }
-
-        const { data: images } = await supabase
-          .from('generated_images')
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false });
-
-        setUsage({
-          plan: userData.plan,
-          credits: {
-            weekly: userData.credits.weekly + userData.credits.extra,
-            used: userData.credits.used,
-            resets: 'Semanal'
-          },
-          history: (images || []).map(img => ({
-            id: img.id,
-            url: img.url,
-            caption: img.caption,
-            niche: img.niche,
-            createdAt: img.created_at,
-            config: img.config
-          }))
-        });
+      setCurrentUser(userData);
+      setIsSuperAdmin(isAdmin);
+      setIsAuthenticated(true);
+      
+      if (activeView === 'landing' || activeView === 'login') {
+        setActiveView(isAdmin ? 'admin' : 'generate');
       }
 
+      const { data: images } = await supabase
+        .from('generated_images')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      setUsage({
+        plan: userData.plan,
+        credits: {
+          weekly: userData.credits.weekly + userData.credits.extra,
+          used: userData.credits.used,
+          resets: 'Semanal'
+        },
+        history: (images || []).map(img => ({
+          id: img.id,
+          url: img.url,
+          caption: img.caption,
+          niche: img.niche,
+          createdAt: img.created_at,
+          config: img.config
+        }))
+      });
     } catch (err) {
-      console.error("Data fetch error:", err);
+      console.error("Falha ao buscar dados do usuário:", err);
     } finally {
       setLoading(false);
     }
@@ -164,36 +148,40 @@ const App: React.FC = () => {
 
   const handleSignOut = async () => {
     setLoading(true);
-    await supabase.auth.signOut();
-    localStorage.clear();
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {}
     resetAppState();
     setActiveView('landing');
   };
 
   const handleNewImage = async (img: GeneratedImage) => {
     if (!currentUser) return;
+    try {
+      await supabase.from('generated_images').insert({
+        id: img.id,
+        user_id: currentUser.id,
+        url: img.url,
+        caption: img.caption,
+        niche: img.niche,
+        config: img.config
+      });
 
-    await supabase.from('generated_images').insert({
-      id: img.id,
-      user_id: currentUser.id,
-      url: img.url,
-      caption: img.caption,
-      niche: img.niche,
-      config: img.config
-    });
+      const newUsedCredits = usage.credits.used + 1;
+      await supabase.from('profiles').update({ credits_used: newUsedCredits }).eq('id', currentUser.id);
 
-    const newUsedCredits = usage.credits.used + 1;
-    await supabase.from('profiles').update({ credits_used: newUsedCredits }).eq('id', currentUser.id);
-
-    setUsage(prev => ({
-      ...prev,
-      history: [img, ...prev.history],
-      credits: { ...prev.credits, used: newUsedCredits }
-    }));
+      setUsage(prev => ({
+        ...prev,
+        history: [img, ...prev.history],
+        credits: { ...prev.credits, used: newUsedCredits }
+      }));
+    } catch (e) {
+      console.error("Erro ao salvar imagem:", e);
+    }
   };
 
   const handleDeleteImage = async (id: string) => {
-    if (window.confirm("Apagar esta arte?")) {
+    if (window.confirm("Apagar esta arte permanentemente?")) {
       const { error } = await supabase.from('generated_images').delete().eq('id', id);
       if (!error) {
         setUsage(prev => ({ ...prev, history: prev.history.filter(img => img.id !== id) }));
@@ -212,8 +200,11 @@ const App: React.FC = () => {
 
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-950 text-white gap-6">
-      <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-      <p className="font-black uppercase tracking-widest text-[10px] italic animate-pulse">Sincronizando Estúdio...</p>
+      <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+      <div className="text-center space-y-2">
+        <p className="font-black uppercase tracking-[0.3em] text-[10px] italic animate-pulse">Sincronizando Estúdio</p>
+        <p className="text-[8px] text-gray-600 uppercase font-bold">Iniciando Motor Gemini Pro</p>
+      </div>
     </div>
   );
 

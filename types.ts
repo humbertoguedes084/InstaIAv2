@@ -58,6 +58,7 @@ export interface Niche {
   name: string;
   icon: string;
   description: string;
+  template: string; // Exemplo rico em detalhes para o briefing
   context: {
     lighting: string;
     atmosphere: string;

@@ -1,53 +1,89 @@
 
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { Niche, GenerationConfig, AssetUploads } from '../types';
 
 export class GeminiService {
-  private static getApiKey(): string | undefined {
-    return process.env.API_KEY;
+  private static getApiKey(): string {
+    return process.env.API_KEY || '';
   }
 
   static parseError(error: any): string {
     const msg = error?.message?.toLowerCase() || "";
+    if (msg.includes("requested entity was not found")) return "MOTOR EM CONFIGURAÇÃO: O projeto ou modelo selecionado ainda não está disponível.";
+    if (msg.includes("safety") || msg.includes("candidate was blocked")) return "DIRETRIZES DE CONTEÚDO: Sua descrição foi filtrada por nossa IA de segurança.";
+    return `CONEXÃO INTERROMPIDA: (${msg}). Tente simplificar seu briefing.`;
+  }
+
+  /**
+   * Atua como Diretor de Arte Sênior para extrair o DNA Visual da referência.
+   */
+  private static async analyzeVisualDNA(base64Image: string): Promise<any> {
+    const ai = new GoogleGenAI({ apiKey: this.getApiKey() });
     
-    if (msg.includes("safety") || msg.includes("candidate was blocked") || msg.includes("finish_reason: 3")) {
-      return "CONTEÚDO BLOQUEADO: Sua descrição ou imagem acionou os filtros de moderação da IA. Tente remover palavras que possam ser interpretadas como agressivas ou proibidas. Use uma linguagem mais neutra.";
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: {
+        parts: [
+          { inlineData: { data: base64Image.split(',')[1], mimeType: 'image/jpeg' } },
+          { text: `
+            Atue como um Diretor de Arte Sênior e Especialista em Engenharia Reversa de Design Visual.
+            Sua tarefa é analisar a imagem fornecida e extrair seu "DNA Estético" em formato JSON.
+            
+            Foque em:
+            1. Paleta de Cores (Hex e Hierarquia: Background, Primária, Secundária, Texto).
+            2. Tipografia (Estilo: Sans Serif, Bold, 3D, Effects).
+            3. Composição (Blueprint: Onde está o produto, logo e preço).
+            4. Elementos Gráficos (Assets, luzes, texturas).
+            5. Um prompt de geração de imagem em inglês focado apenas no background e estilo.
+          `.trim() }
+        ]
+      },
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            colors: {
+              type: Type.OBJECT,
+              properties: {
+                background: { type: Type.STRING },
+                primary: { type: Type.STRING },
+                accent: { type: Type.STRING },
+                text: { type: Type.STRING }
+              }
+            },
+            typography: { type: Type.STRING },
+            composition: { type: Type.STRING },
+            image_generation_prompt: { type: Type.STRING }
+          }
+        }
+      }
+    });
+
+    try {
+      return JSON.parse(response.text);
+    } catch {
+      return null;
     }
-    if (msg.includes("quota") || msg.includes("exhausted") || msg.includes("429") || msg.includes("limit reached")) {
-      return "LIMITE ATINGIDO: O motor de IA recebeu muitas requisições simultâneas. Aguarde 30 segundos e tente novamente.";
-    }
-    if (msg.includes("api key") || msg.includes("invalid api key") || msg.includes("not found")) {
-      return "ERRO DE CONEXÃO: Sua chave de acesso à IA expirou ou é inválida. Clique em 'Ativar Agora' ou verifique sua conta.";
-    }
-    if (msg.includes("inline data") || msg.includes("mime type")) {
-      return "FALHA NO ARQUIVO: Formato de imagem não suportado. Tente JPG/PNG padrão.";
-    }
-    
-    return `FALHA TÉCNICA: O motor encontrou um problema inesperado (${msg}). Tente simplificar sua descrição ou usar outra foto.`;
   }
 
   static async generateSmartCaption(niche: Niche, config: GenerationConfig): Promise<{text: string, sources: any[]}> {
     const apiKey = this.getApiKey();
-    if (!apiKey) throw new Error("KEY_MISSING");
+    if (!apiKey) throw new Error("API_KEY_NOT_FOUND");
 
     try {
       const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: `
-          Persona: Diretor de Redação (Copywriter) Sênior de uma Agência de Publicidade em Nova York.
+          Persona: Diretor de Redação Sênior de Agência de Publicidade.
           Nicho: ${niche.name}.
           Contexto do Produto: ${config.text || niche.description}.
-          Preço: ${config.price || 'Sob consulta'}.
+          Preço: ${config.price || 'R$ 79,90'}.
           
-          Tarefa: Criar uma legenda magnética de alta conversão.
-          Estrutura: 
-          1. Gancho irresistível.
-          2. Benefícios emocionais.
-          3. Chamada para ação (CTA) direta.
-          4. Hashtags estratégicas.
-          
-          Tom: Sofisticado, minimalista e profissional.
+          Tarefa: Criar uma legenda magnética irresistível para Instagram Ads.
+          Estrutura: 1. Headline Impactante 2. Benefício Central 3. Chamada para Ação.
+          Tom: Sofisticado, comercial e elegante.
         `.trim(),
         config: { tools: [{ googleSearch: {} }] }
       });
@@ -66,41 +102,47 @@ export class GeminiService {
     onProgress: (msg: string) => void
   ): Promise<string> {
     const apiKey = this.getApiKey();
-    if (!apiKey) throw new Error("KEY_MISSING");
+    if (!apiKey) throw new Error("API_KEY_NOT_FOUND");
 
+    let visualDNA = null;
+    if (assets.styleReference) {
+      onProgress("Decodificando DNA Visual da Referência...");
+      visualDNA = await this.analyzeVisualDNA(assets.styleReference);
+    }
+
+    onProgress("Renderizando Arte Final em 4K...");
     const ai = new GoogleGenAI({ apiKey });
-    onProgress("Direção de Arte: Agência de Marketing Global...");
     
-    // Instruções rígidas de qualidade de agência
     const agencyStandardPrompt = `
-      [AGENCY MASTER DIRECTIVE]
-      You are a World-Class Creative Director and Commercial Product Photographer.
-      Quality Requirement: Absolute masterpiece, magazine-ready, cinematic, hyper-realistic.
-      Visual Style: High-end luxury advertisement, ultra-premium commercial aesthetics.
-      Technical Specs: 8k resolution, razor-sharp textures, master-level professional color grading.
+      [STRICT AGENCY ART DIRECTION - ADVERTISING CLONE DIRECTIVE]
+      Role: World-Class Commercial Photographer and Master Ad Designer.
+      Goal: Create an elite marketing campaign for: ${niche.name}.
       
-      [SCENE SETUP]
-      Niche Category: ${niche.name}.
-      Concept: ${config.text || 'High-end presentation of ' + niche.name}.
-      Lighting: ${niche.context.lighting}. Focus on studio light architecture (Key, Fill, Rim lights).
-      Environment: ${niche.context.atmosphere}. Clean, elegant, upscale.
-      Palette: ${niche.context.colors}.
-      Composition: ${niche.context.composition}. Center the product as a hero.
+      [VISUAL DNA - REVERSE ENGINEERED]
+      ${visualDNA ? `
+      - REPLICATE COLORS: Background ${visualDNA.colors.background}, Primary ${visualDNA.colors.primary}, Accent ${visualDNA.colors.accent}.
+      - REPLICATE STYLE: ${visualDNA.image_generation_prompt}.
+      - TYPOGRAPHY STYLE: ${visualDNA.typography}.
+      - COMPOSITION BLUEPRINT: ${visualDNA.composition}.` : ""}
       
-      [STYLE FIDELITY - CRITICAL]
-      ${assets.styleReference ? `STRICT STYLE REQUIREMENT: Use the provided style reference image as the primary template. You MUST replicate its lighting temperature, color saturation levels, artistic mood, and overall visual DNA perfectly. The final result must look like it belongs to the same collection as the reference.` : ""}
+      [SCENE ARCHITECTURE]
+      Subject: ${config.text || niche.template}.
+      Technical Specs: ${niche.context.lighting}, ${niche.context.atmosphere}.
       
-      [PRODUCT & BRAND]
-      ${assets.productPhoto ? "Integrate the main product from the uploaded image seamlessly into this premium environment. Maintain its proportions while enhancing shadows and reflections to match the new professional lighting." : ""}
-      ${assets.brandLogo ? "Subtly and elegantly integrate the uploaded brand logo as a realistic physical element (printed on packaging, etched on surface, or as a high-end subtle overlay)." : ""}
-      ${config.price ? `Subtle high-end value hint: ${config.price}.` : ""}
+      [MANDATORY OFFER & BRAND INTEGRATION]
+      ${config.price ? `PRICE DISPLAY: It is MANDATORY to display the price "${config.price}" clearly in the image. Use professional advertising typography, a clean price tag, or a sophisticated sticker design that integrates perfectly with the aesthetic.` : ""}
+      ${assets.brandLogo ? "BRAND LOGO: It is MANDATORY to incorporate the provided brand logo clearly and visibly. Place it professionally in a corner or integrated into the scene/packaging so it stands out as a high-end detail." : ""}
+      ${assets.productPhoto ? "PRODUCT PHOTO: Integrate the product from the photo perfectly into this scene with matching light and realistic shadows." : ""}
       
-      Final Finish: No artifacts, professional lens bokeh, commercial studio perfection.
+      [TECHNICAL REQUIREMENTS]
+      - 8K UHD, commercial quality, professional studio finish.
+      - Lens: 85mm f/1.4 Hero Shot.
+      - Ensure all mandatory elements (Price, Logo, Product) are visible and perfectly balanced.
+      - No artifacts, no blurry subjects, no AI watermarks.
     `.trim();
 
     const parts: any[] = [{ text: agencyStandardPrompt }];
-
-    // Anexar imagens respeitando a ordem de importância para o modelo
+    
     if (assets.productPhoto) {
       parts.push({ inlineData: { data: assets.productPhoto.split(',')[1], mimeType: 'image/jpeg' } });
     }
@@ -111,8 +153,6 @@ export class GeminiService {
       parts.push({ inlineData: { data: assets.brandLogo.split(',')[1], mimeType: 'image/jpeg' } });
     }
 
-    onProgress("Finalizando renderização 4K Studio...");
-
     try {
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
@@ -120,12 +160,12 @@ export class GeminiService {
         config: { imageConfig: { aspectRatio: config.aspectRatio as any } }
       });
 
-      if (response.candidates && response.candidates[0].content.parts) {
+      if (response.candidates?.[0]?.content?.parts) {
         for (const part of response.candidates[0].content.parts) {
           if (part.inlineData) return `data:image/png;base64,${part.inlineData.data}`;
         }
       }
-      throw new Error("Falha na geração da imagem.");
+      throw new Error("Falha na renderização. Tente simplificar seu briefing.");
     } catch (error: any) {
       throw new Error(this.parseError(error));
     }

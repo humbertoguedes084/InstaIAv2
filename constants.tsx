@@ -7,6 +7,7 @@ export const NICHES: Niche[] = [
     name: 'Sushi & Izakaya Premium',
     icon: '🍣',
     description: 'Estética oriental minimalista com foco no frescor extremo e luxo japonês.',
+    template: 'Fotografia macro de um combo de sushi premium sobre pedra ardósia negra. Iluminação lateral dramática realçando a textura do salmão fresco com brilho úmido. Fundo desfocado de um restaurante zen sofisticado. Cores: Laranja vibrante, preto profundo e verde wasabi.',
     context: {
       lighting: "soft focused spot-lighting on the fish texture, high-contrast chiaroscuro style",
       atmosphere: "zen high-end sushi bar, dark polished stone background, minimalist elegance",
@@ -15,10 +16,37 @@ export const NICHES: Niche[] = [
     }
   },
   {
+    id: 'acaiteria',
+    name: 'Açaiteria & Sorveteria',
+    icon: '🍧',
+    description: 'Explosão de refrescância, texturas geladas e cores tropicais vibrantes.',
+    template: 'Pote de açaí premium transbordando acompanhamentos (leite em pó, morangos frescos, granola crocante). Gotículas de condensação no exterior do pote para transmitir temperatura gelada. Iluminação de sol matinal (High-Key) criando sombras suaves e realçando as cores vibrantes. Fundo de madeira clara ou mármore branco. Estética de lifestyle tropical de luxo.',
+    context: {
+      lighting: "bright high-key natural sunlight, crisp shadows, moisture droplets on surfaces",
+      atmosphere: "upscale tropical resort, clean modern presentation, refreshing vibe",
+      colors: "intense velvet purple, neon fruit highlights, clean white marble, deep berry tones",
+      composition: "dynamic 45-degree angle, extreme focus on toppings texture, bokeh background"
+    }
+  },
+  {
+    id: 'burger',
+    name: 'Burger Artesanal',
+    icon: '🍔',
+    description: 'Suculência e visual food porn para hamburguerias de elite.',
+    template: 'Hambúrguer artesanal monumental em ângulo baixo (Hero Shot). Queijo cheddar derretendo em camadas, pão brioche brilhante com gergelim. Vapor sutil saindo da carne suculenta. Luz quente vindo de trás para criar contorno. Fundo rústico de madeira e metal.',
+    context: {
+      lighting: "warm backlighting, steam detail, high contrast highlights",
+      atmosphere: "rustic urban burger joint, industrial interior",
+      colors: "golden brown, melted yellow, deep meat red, fresh green",
+      composition: "low angle, massive look, extreme detail on textures"
+    }
+  },
+  {
     id: 'pizzaria',
     name: 'Pizzaria Gourmet',
     icon: '🍕',
-    description: 'Destaque para queijo derretido e texturas rústicas de alta gastronomia.',
+    description: 'Destaque para texturas rústicas e ingredientes selecionados.',
+    template: 'Pizza artesanal saindo do forno a lenha. Close-up no queijo borbulhando e manjericão fresco. Bordas levemente chamuscadas (leopard spots). Fundo escuro com sutil brilho alaranjado do fogo. Estética de revista de gastronomia italiana.',
     context: {
       lighting: "warm cinematic oven glow, directional spotlighting to highlight textures",
       atmosphere: "luxury artisan pizzeria, moody lighting, expensive ingredients",
@@ -27,34 +55,50 @@ export const NICHES: Niche[] = [
     }
   },
   {
-    id: 'acaiteria',
-    name: 'Açaí Premium',
-    icon: '🍧',
-    description: 'Explosão de frescor tropical com estética clean e refrescante.',
+    id: 'barbearia',
+    name: 'Barbearia Premium',
+    icon: '✂️',
+    description: 'Estética vintage e masculina com foco em detalhes e cuidado.',
+    template: 'Interior de barbearia clássica com poltronas de couro e espelhos moldurados. Close-up em ferramentas de metal brilhante (tesoura, navalha). Luz de tungstênio quente e neon azul sutil. Estética lifestyle masculina sofisticada.',
     context: {
-      lighting: "bright high-key natural sunlight, crisp shadows, moisture droplets",
-      atmosphere: "upscale tropical resort, clean modern presentation",
-      colors: "intense velvet purple, neon fruit highlights, clean white marble",
-      composition: "dynamic top-down flat lay with artistic topping placement"
+      lighting: "warm vintage tungsten, sharp reflections on metal tools",
+      atmosphere: "traditional luxury barbershop, leather and dark wood",
+      colors: "tobacco brown, chrome silver, deep navy blue",
+      composition: "shallow depth of field, focused on premium details"
     }
   },
   {
-    id: 'veiculos',
-    name: 'Concessionária de Luxo',
-    icon: '🚗',
-    description: 'Reflexos metálicos, profundidade e visual de comercial de TV.',
+    id: 'dentista',
+    name: 'Odontologia Estética',
+    icon: '🦷',
+    description: 'Visual clean, tecnológico e focado em bem-estar e perfeição.',
+    template: 'Consultório odontológico ultra-moderno e minimalista. Iluminação branca pura e brilhante. Detalhes em metal escovado e vidro. Atmosfera de clínica de luxo, transmitindo segurança e higiene impecável. Foto de alta claridade.',
     context: {
-      lighting: "soft-box studio reflections, dramatic rim lighting, long exposure light trails",
-      atmosphere: "high-tech minimalist hangar or modern architectural background",
-      colors: "metallic silver, carbon fiber black, deep sapphire blue",
-      composition: "hero perspective, low-wide angle, aggressive professional car photography"
+      lighting: "pure white clinical light, shadowless, high key",
+      atmosphere: "futuristic luxury dental clinic, pristine clean",
+      colors: "titanium white, soft cyan, metallic silver",
+      composition: "symmetrical, architectural wide angle, clean lines"
+    }
+  },
+  {
+    id: 'imoveis',
+    name: 'Imobiliária High-End',
+    icon: '🏢',
+    description: 'Visual arquitetônico de mansões e apartamentos de luxo.',
+    template: 'Sala de estar de uma mansão de luxo com pé direito duplo. Janelas amplas mostrando pôr do sol dourado. Decoração minimalista com móveis de design. Iluminação equilibrada entre interna quente e externa natural. Ângulo ultra-wide.',
+    context: {
+      lighting: "golden hour natural light mixed with warm interior accents",
+      atmosphere: "exclusive luxury mansion, modern architecture",
+      colors: "neutral beige, oak wood, sunset gold, sky blue",
+      composition: "wide-angle architectural photography, straight vertical lines"
     }
   },
   {
     id: 'cosmeticos',
-    name: 'Cosméticos & Estética',
+    name: 'Cosméticos & Skincare',
     icon: '💄',
-    description: 'Minimalismo, luxo silencioso e texturas impecáveis.',
+    description: 'Texturas acetinadas e iluminação suave de beleza.',
+    template: 'Frasco de sérum luxuoso sobre pedestal de mármore. Respingo artístico de água ou creme ao lado. Iluminação suave e difusa estilo "beauty lighting". Reflexos perolados e estética clean-girl. Fundo em tons pastéis suaves.',
     context: {
       lighting: "soft diffused beauty lighting, ethereal glow, pearl-like reflections",
       atmosphere: "high-end clinical spa, minimalist laboratory, luxury vanity",
@@ -66,7 +110,8 @@ export const NICHES: Niche[] = [
     id: 'roupas',
     name: 'Moda Editorial',
     icon: '👕',
-    description: 'Estética de revista de moda (Vogue/GQ style).',
+    description: 'Estética de passarela e revistas de moda internacionais.',
+    template: 'Look de moda editorial em um loft industrial urbano. Modelo posando com iluminação de estúdio contrastante. Estética Vogue/GQ. Texturas de tecido nítidas (seda, couro). Profundidade de campo rasa focando no design da peça.',
     context: {
       lighting: "professional studio strobe lighting, high contrast, fashion show mood",
       atmosphere: "minimalist urban studio, industrial loft, high-end boutique",
@@ -78,91 +123,34 @@ export const NICHES: Niche[] = [
     id: 'petshop',
     name: 'Pet Shop Boutique',
     icon: '🐾',
-    description: 'Estética fofa e luxuosa para cuidados animais premium.',
+    description: 'Cuidado animal com estética fofa e sofisticada.',
+    template: 'Cachorro da raça Golden Retriever saindo de um banho em spa pet, com laço elegante. Fundo de azulejos coloridos modernos e plantas. Luz natural suave de janela. Cores alegres e vibrantes, transmitindo carinho e qualidade.',
     context: {
-      lighting: "warm soft daylight, playful highlights, cozy shadows",
-      atmosphere: "luxury pet spa, colorful modern interior, high-end grooming studio",
-      colors: "pastel blues, soft pinks, clean beige, mint green",
-      composition: "eye-level portrait, expressive animal features, professional pet photography"
-    }
-  },
-  {
-    id: 'imoveis',
-    name: 'Imobiliária High-End',
-    icon: '🏢',
-    description: 'Visual arquitetônico de revistas de luxo e design.',
-    context: {
-      lighting: "golden hour architectural lighting, interior ambient glow, balanced exposure",
-      atmosphere: "minimalist luxury mansion, modern penthouse, high-ceiling loft",
-      colors: "oak wood tones, concrete grey, navy blue accents, pure white",
-      composition: "wide-angle architectural shot, perfect vertical lines, leading lines"
-    }
-  },
-  {
-    id: 'dentista',
-    name: 'Odontologia Estética',
-    icon: '🦷',
-    description: 'Visual clínico impecável, brilho e sensação de saúde.',
-    context: {
-      lighting: "sterile high-key lighting, dental reflector glow, sparkling highlights",
-      atmosphere: "modern high-tech clinic, minimalist white luxury",
-      colors: "cyan blue, titanium white, silver chrome, healthy pinks",
-      composition: "macro focus on details, clean clinical symmetry, professional medical photography"
-    }
-  },
-  {
-    id: 'advocacia',
-    name: 'Advocacia & Business',
-    icon: '⚖️',
-    description: 'Sobriedade, autoridade e visual corporativo clássico.',
-    context: {
-      lighting: "moody office lighting, desk lamp glow, soft executive shadows",
-      atmosphere: "traditional mahogany library, modern glass skyscraper office",
-      colors: "deep mahogany, brass gold, charcoal grey, oxford blue",
-      composition: "formal executive portrait, stable horizontal lines, authoritative depth"
+      lighting: "soft daylight, bright and cheerful",
+      atmosphere: "luxury modern pet boutique, colorful and friendly",
+      colors: "mint green, pastel pink, golden fur tones",
+      composition: "eye-level portrait, bokeh background, sharp fur detail"
     }
   },
   {
     id: 'suplementos',
-    name: 'Suplementação & Fitness',
+    name: 'Suplementos & Fitness',
     icon: '💪',
-    description: 'Energia, força e texturas metálicas/suadas.',
+    description: 'Energia, força e visual técnico para performance.',
+    template: 'Pote de Whey Protein em cenário de academia industrial escura. Luz lateral dura realçando o relevo da embalagem e gotas de suor/condensação. Estética de alta performance, sombras profundas e luzes de neon azul/vermelho sutil.',
     context: {
-      lighting: "harsh side-lighting to emphasize muscle and texture, dramatic shadows",
-      atmosphere: "dark industrial gym, professional crossfit box, futuristic lab",
-      colors: "neon electric blue, carbon black, metallic orange, vibrant red",
-      composition: "dynamic low-angle shot, extreme sharpness, high-contrast action feel"
-    }
-  },
-  {
-    id: 'burger',
-    name: 'Burguer Artesanal',
-    icon: '🍔',
-    description: 'Suculência extrema e visual "food porn" profissional.',
-    context: {
-      lighting: "warm side-lighting to reveal steam and texture, rim light on the bun",
-      atmosphere: "modern industrial burger joint, urban nightlife vibe",
-      colors: "rich toasted browns, vibrant cheddar yellow, fresh organic greens",
-      composition: "monumental stack shot, macro focus on melting cheese and dripping juices"
-    }
-  },
-  {
-    id: 'barbearia',
-    name: 'Barbearia Premium',
-    icon: '✂️',
-    description: 'Visual vintage moderno, couro e texturas de metal escovado.',
-    context: {
-      lighting: "warm tungsten bulbs, neon sign reflections, sharp highlights on tools",
-      atmosphere: "vintage luxury barbershop, leather chairs, wood panels",
-      colors: "leather brown, chrome silver, deep navy, classic red",
-      composition: "cinematic depth of field, focused on craftsmanship details"
+      lighting: "harsh side-lighting, cinematic shadows, high contrast",
+      atmosphere: "industrial dark gym, high performance vibe",
+      colors: "carbon black, electric blue, metallic silver",
+      composition: "dynamic tilted angle, close-up on product labels"
     }
   },
   {
     id: 'cafe',
-    name: 'Cafeteria Especializada',
+    name: 'Café & Patisserie',
     icon: '☕',
-    description: 'Aconchego, vapor e grãos selecionados em alta definição.',
+    description: 'Aconchego e texturas de confeitaria fina.',
+    template: 'Xícara de cappuccino com latte art complexa. Ao lado, um croissant dourado e folhado. Vapor subindo sutilmente. Luz de manhã entrando pela janela. Mesa de madeira rústica com grãos de café espalhados. Estética aconchegante.',
     context: {
       lighting: "soft morning window light, warm lamp glow, steam backlit",
       atmosphere: "minimalist nordic cafe, rustic brick and wood elements",
@@ -171,22 +159,11 @@ export const NICHES: Niche[] = [
     }
   },
   {
-    id: 'vinhos',
-    name: 'Adega & Vinhos',
-    icon: '🍷',
-    description: 'Elegância, transparência e visual de sommelier de elite.',
-    context: {
-      lighting: "backlighting to show wine clarity, candle flicker, soft rim lights",
-      atmosphere: "stone wine cellar, luxury dining, vineyard sunset mood",
-      colors: "deep burgundy, amber gold, forest green, rustic oak",
-      composition: "elegant vertical pour, macro focus on glass condensation"
-    }
-  },
-  {
     id: 'joalheria',
     name: 'Joalheria & Luxo',
     icon: '💍',
-    description: 'Brilho facetado e luxo absoluto em macro fotografia.',
+    description: 'Brilho facetado e luxo absoluto em macro.',
+    template: 'Anel de diamante sobre veludo negro profundo. Iluminação pontual criando "starbursts" e brilhos intensos nas facetas da joia. Fundo totalmente escuro para destacar o metal precioso. Macro fotografia de extrema nitidez.',
     context: {
       lighting: "precise jewelry sparkle lights, hard caustic reflections",
       atmosphere: "black infinity studio, sophisticated dark elegance",
@@ -195,10 +172,24 @@ export const NICHES: Niche[] = [
     }
   },
   {
+    id: 'advocacia',
+    name: 'Advocacia & Business',
+    icon: '⚖️',
+    description: 'Sobriedade, autoridade e visual corporativo clássico.',
+    template: 'Escritório de advocacia com biblioteca de livros antigos ao fundo. Mesa de madeira nobre com caneta tinteiro e documentos. Luz de abajur clássico criando atmosfera de seriedade e confiança. Estética de filme de tribunal.',
+    context: {
+      lighting: "moody office lighting, desk lamp glow, soft executive shadows",
+      atmosphere: "traditional mahogany library, modern glass skyscraper office",
+      colors: "deep mahogany, brass gold, charcoal grey, oxford blue",
+      composition: "formal executive portrait, stable horizontal lines, authoritative depth"
+    }
+  },
+  {
     id: 'farmacia',
     name: 'Saúde & Farmácia',
     icon: '💊',
-    description: 'Visual clean, confiável e ultra-nítido.',
+    description: 'Confiabilidade, clareza e visual médico premium.',
+    template: 'Embalagem de vitamina em ambiente de laboratório moderno e iluminado. Prateleiras brancas impecáveis. Luz fria e clara. Estética de wellness e saúde preventiva. Fundo com sutil profundidade de campo.',
     context: {
       lighting: "pure white clinical light, shadowless photography",
       atmosphere: "modern laboratory, pristine shelves, wellness focus",
@@ -207,113 +198,39 @@ export const NICHES: Niche[] = [
     }
   },
   {
-    id: 'escola',
-    name: 'Cursos & Educação',
-    icon: '📚',
-    description: 'Visual vibrante, inspirador e focado em aprendizado.',
+    id: 'veiculos',
+    name: 'Veículos & Detailing',
+    icon: '🚗',
+    description: 'Brilho metálico e visual de comercial automotivo.',
+    template: 'Carro esportivo em estúdio escuro com luzes de LED tubulares refletidas na lataria impecável. Foco nos faróis acesos e no emblema da marca. Estética tech e veloz. Chão molhado refletindo as luzes do ambiente.',
     context: {
-      lighting: "bright inspiring daylight, colorful environment",
-      atmosphere: "modern coworking, vibrant classroom, digital nomad setup",
-      colors: "indigo blue, bright yellow, creative purple",
-      composition: "dynamic angles, focus on tools like tablets/books"
-    }
-  },
-  {
-    id: 'hortifruti',
-    name: 'Hortifruti Orgânico',
-    icon: '🍎',
-    description: 'Frescor máximo, cores vibrantes e texturas naturais.',
-    context: {
-      lighting: "bright natural sunlight, fresh water droplets",
-      atmosphere: "rustic farmers market, eco-friendly presentation",
-      colors: "vibrant garden colors, earthy browns, leafy greens",
-      composition: "overflowing bounty, rustic wood background, macro textures"
-    }
-  },
-  {
-    id: 'esportes',
-    name: 'Artigos Esportivos',
-    icon: '👟',
-    description: 'Movimento, velocidade e tecnologia de alta performance.',
-    context: {
-      lighting: "dramatic flash photography, high contrast, rim lighting",
-      atmosphere: "urban track, modern stadium, futuristic tech lab",
-      colors: "neon green, electric blue, aggressive black",
-      composition: "dynamic tilted angle, sense of motion, sharp details"
-    }
-  },
-  {
-    id: 'tech',
-    name: 'Tecnologia & Gadgets',
-    icon: '💻',
-    description: 'Futurismo, leds e estética de vale do silício.',
-    context: {
-      lighting: "cyberpunk neon accents, soft glow from screens",
-      atmosphere: "minimalist tech workstation, dark laboratory",
-      colors: "deep space grey, neon violet, electric cyan",
-      composition: "perfectly aligned tech grid, macro of circuits and textures"
+      lighting: "soft-box studio reflections, dramatic rim lighting, long exposure light trails",
+      atmosphere: "high-tech minimalist hangar or modern architectural background",
+      colors: "metallic silver, carbon fiber black, deep sapphire blue",
+      composition: "hero perspective, low-wide angle, aggressive professional car photography"
     }
   }
-];
-
-export const MOCK_USERS: UserAccount[] = [
-  { 
-    id: 'admin-1', 
-    email: 'humbertoguedesdev@gmail.com', 
-    name: 'Humberto Guedes (Admin)', 
-    plan: PlanType.PREMIUM, 
-    status: UserStatus.ACTIVE, 
-    joinedAt: '2023-01-01', 
-    credits: { weekly: 9999, used: 0, extra: 9999 } 
-  }
-];
-
-export const TESTIMONIALS = [
-  { 
-    id: 1, 
-    name: "Carla Silva", 
-    handle: "@burgerprime", 
-    rating: 5, 
-    text: "Revolucionou nosso marketing no Instagram! De foto do iPhone para campanha profissional em segundos.", 
-    avatar: "https://i.pravatar.cc/150?u=12" 
-  },
-  { 
-    id: 2, 
-    name: "Marcos Oliveira", 
-    handle: "@modaelite", 
-    rating: 5, 
-    text: "Aumentamos 300% no engajamento em 30 dias. A qualidade das artes é de outro mundo.", 
-    avatar: "https://i.pravatar.cc/150?u=45" 
-  },
-  { 
-    id: 3, 
-    name: "Juliana Santos", 
-    handle: "@makesun", 
-    rating: 5, 
-    text: "Gerou 5 artes em 2 minutos! Perfeito para quem precisa de agilidade no dia a dia.", 
-    avatar: "https://i.pravatar.cc/150?u=89" 
-  },
 ];
 
 export const PLANS = [
   {
     type: PlanType.BASIC,
-    price: 'R$ 49,90',
+    price: 'R$ 79,90',
     credits: 40,
     features: [
-      'Imagens em Qualidade Agência',
+      'Imagens em Qualidade Agência Premium',
       'Até 40 artes por mês',
       'Direcionamento Criativo via Prompt',
-      'Suporte via E-mail',
+      'Suporte via WhatsApp',
       'Acesso à Galeria Estúdio'
     ]
   },
   {
     type: PlanType.PRO,
-    price: 'R$ 97,90',
+    price: 'R$ 147,90',
     credits: 100,
     features: [
-      'Imagens em Qualidade Agência',
+      'Imagens em Qualidade Agência Premium',
       'Até 100 artes por mês',
       'Prioridade na Renderização',
       'Filtros Exclusivos por Nicho',
@@ -322,7 +239,7 @@ export const PLANS = [
   },
   {
     type: PlanType.PREMIUM,
-    price: 'R$ 197,90',
+    price: 'R$ 297,90',
     credits: 500,
     features: [
       'Artes Ilimitadas (Fair Use)',
