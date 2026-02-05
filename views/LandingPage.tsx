@@ -46,7 +46,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGoToAuth }) => {
               Fotos que <span className="text-indigo-600">vendem</span> em segundos
             </h1>
             <p className="text-lg md:text-2xl text-gray-400 font-medium max-w-lg mx-auto lg:mx-0 leading-relaxed">
-              O estúdio de marketing virtual que transforma produtos comuns em campanhas de elite para Instagram por apenas <span className="text-gray-900 font-black">R$ 49,90</span>.
+              O estúdio de marketing virtual que transforma produtos comuns em campanhas de elite para Instagram por apenas <span className="text-gray-900 font-black">R$ 79,90</span>.
             </p>
             
             <div className="flex flex-col gap-6 pt-4">
