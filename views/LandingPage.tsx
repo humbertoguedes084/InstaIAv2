@@ -148,7 +148,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGoToAuth }) => {
             <div className="space-y-8 relative z-10">
               <div className="bg-indigo-600 w-fit mx-auto px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Plano Estúdio Basic</div>
               <div className="flex flex-col">
-                <span className="text-6xl font-black italic tracking-tighter">R$ 49,90</span>
+                <span className="text-6xl font-black italic tracking-tighter">R$ 79,90</span>
                 <span className="text-indigo-400 font-black uppercase tracking-widest text-xs mt-2">Mensais</span>
               </div>
               <div className="space-y-4 text-left border-t border-white/10 pt-8">
