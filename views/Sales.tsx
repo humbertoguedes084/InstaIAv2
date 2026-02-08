@@ -144,7 +144,7 @@ const Sales: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-10 border-t border-white/10 relative z-10">
              {[
                { icon: ShieldCheck, label: "Garantia 7 Dias" },
-               { icon: Star, label: "IA Gemini 2.5" },
+               { icon: Star, label: "IA" },
                { icon: Zap, label: "Render 4K" },
                { icon: MessageCircle, label: "Suporte VIP" }
              ].map((item, i) => (
