@@ -78,7 +78,7 @@ const Sales: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
               {[
                 "Apenas R$ 79,90/mês (Menos que um café)",
                 "Artes prontas em 3 segundos",
-                "IA que decodifica o DNA de marcas famosas",
+                "IA que cria o DNA de marcas famosas",
                 "Controle total na palma da sua mão",
                 "Qualidade de Agência Sênior 24h por dia"
               ].map((text, i) => (
@@ -127,7 +127,7 @@ const Sales: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                POR <span className="text-emerald-400">R$ 79,90/mês</span>
              </h2>
              <p className="text-indigo-200/60 font-medium text-lg max-w-xl mx-auto">
-               Libere agora 40 créditos de renderização premium, clonagem de DNA Visual e Legendas Magnéticas.
+               Libere agora 40 créditos de renderização premium, criação de DNA Visual e Legendas Magnéticas.
              </p>
           </div>
           
