@@ -1,9 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { Users, ShieldCheck, Search, CheckCircle, Zap, Trash2, LayoutGrid, CreditCard, Save, RefreshCcw } from 'lucide-react';
+import { Users, ShieldCheck, Search, CheckCircle, Zap, Trash2, LayoutGrid, CreditCard, Save, RefreshCcw, ExternalLink } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
-const SuperAdmin: React.FC = () => {
+interface SuperAdminProps {
+  onNavigate?: (view: string) => void;
+}
+
+const SuperAdmin: React.FC<SuperAdminProps> = ({ onNavigate }) => {
   const [users, setUsers] = useState<any[]>([]);
   const [stats, setStats] = useState({ totalImages: 0, pendingUsers: 0 });
   const [searchTerm, setSearchTerm] = useState('');
@@ -75,7 +79,15 @@ const SuperAdmin: React.FC = () => {
             <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mt-1">Marketing Engine Control • Super Admin</p>
           </div>
         </div>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
+           {onNavigate && (
+             <button 
+              onClick={() => onNavigate('sales')}
+              className="px-6 py-3 bg-indigo-600/10 text-indigo-400 rounded-xl font-bold text-xs uppercase tracking-widest border border-indigo-500/20 hover:bg-indigo-600 hover:text-white transition-all flex items-center gap-2"
+             >
+               <ExternalLink size={14} /> Ver Página de Vendas
+             </button>
+           )}
            <button 
             onClick={fetchData} 
             disabled={loading}

@@ -7,6 +7,7 @@ import LandingPage from './views/LandingPage';
 import SuperAdmin from './views/SuperAdmin';
 import Auth from './views/Auth';
 import Gallery from './views/Gallery';
+import Sales from './views/Sales'; // Importando a nova view
 import { UserUsage, PlanType, GeneratedImage, UserAccount, UserStatus } from './types';
 import { supabase } from './lib/supabase';
 
@@ -29,6 +30,11 @@ const App: React.FC = () => {
 
   useEffect(() => {
     let mounted = true;
+
+    // Lógica para detectar se o usuário veio pelo link de oferta
+    if (window.location.hash === '#oferta') {
+      setActiveView('sales');
+    }
 
     // Fail-safe: Força o desligamento do loading após 2.5s caso o Supabase demore
     const timeout = setTimeout(() => {
@@ -113,6 +119,7 @@ const App: React.FC = () => {
       setIsSuperAdmin(isAdmin);
       setIsAuthenticated(true);
       
+      // Se estiver na landing/login, vai para a view principal, a menos que esteja na oferta
       if (activeView === 'landing' || activeView === 'login') {
         setActiveView(isAdmin ? 'admin' : 'generate');
       }
@@ -209,6 +216,9 @@ const App: React.FC = () => {
   );
 
   const renderView = () => {
+    // A view de vendas é acessível por qualquer um se o link for direto
+    if (activeView === 'sales') return <Sales onBack={() => setActiveView(isAuthenticated ? 'generate' : 'landing')} />;
+
     if (!isAuthenticated) {
       if (activeView === 'login') return <Auth onAuthSuccess={(userId, email) => fetchUserData(userId, email)} onBack={() => setActiveView('landing')} />;
       return <LandingPage onGoToAuth={() => setActiveView('login')} />;
@@ -220,7 +230,7 @@ const App: React.FC = () => {
       case 'generate':
         return <Generator onSuccess={handleNewImage} usage={usage} onDeleteImage={handleDeleteImage} onDownloadImage={triggerDownload} />;
       case 'admin':
-        return <SuperAdmin />;
+        return <SuperAdmin onNavigate={setActiveView} />;
       case 'gallery':
         return <Gallery history={filteredHistory} onDelete={handleDeleteImage} onDownload={triggerDownload} />;
       default:
@@ -231,7 +241,7 @@ const App: React.FC = () => {
   return (
     <div className={`min-h-screen ${isSuperAdmin && activeView === 'admin' ? 'bg-gray-950' : 'bg-gray-50'}`}>
       <div className="flex flex-col md:flex-row min-h-screen">
-        {isAuthenticated && (
+        {isAuthenticated && activeView !== 'sales' && (
           <Sidebar activeView={activeView} setActiveView={setActiveView} isAdmin={isSuperAdmin} userName={currentUser?.name} onSignOut={handleSignOut} />
         )}
         <main className="flex-1 overflow-x-hidden">{renderView()}</main>
