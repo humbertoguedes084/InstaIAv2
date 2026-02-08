@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Users, ShieldCheck, Search, CheckCircle, Zap, Trash2, LayoutGrid, CreditCard, Save, RefreshCcw, ExternalLink } from 'lucide-react';
+import { Users, ShieldCheck, Search, CheckCircle, Zap, Trash2, LayoutGrid, CreditCard, Save, RefreshCcw, ExternalLink, Copy, Check, Share2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface SuperAdminProps {
@@ -14,6 +14,9 @@ const SuperAdmin: React.FC<SuperAdminProps> = ({ onNavigate }) => {
   const [loading, setLoading] = useState(true);
   const [editingCredits, setEditingCredits] = useState<Record<string, number>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const salesLink = `${window.location.origin}${window.location.pathname}#oferta`;
 
   useEffect(() => {
     fetchData();
@@ -30,6 +33,12 @@ const SuperAdmin: React.FC<SuperAdminProps> = ({ onNavigate }) => {
       pendingUsers: usersData?.filter(u => u.status === 'WAITING_HOTMART').length || 0
     });
     setLoading(false);
+  };
+
+  const copySalesLink = () => {
+    navigator.clipboard.writeText(salesLink);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
   };
 
   const updateCredits = async (id: string, currentStatus: string) => {
@@ -50,7 +59,6 @@ const SuperAdmin: React.FC<SuperAdminProps> = ({ onNavigate }) => {
     if (error) {
       alert("Erro ao atualizar: " + error.message);
     } else {
-      // Atualizar estado local após sucesso
       setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updateData } : u));
     }
     setSavingId(null);
@@ -80,23 +88,51 @@ const SuperAdmin: React.FC<SuperAdminProps> = ({ onNavigate }) => {
           </div>
         </div>
         <div className="flex flex-wrap gap-4">
-           {onNavigate && (
-             <button 
-              onClick={() => onNavigate('sales')}
-              className="px-6 py-3 bg-indigo-600/10 text-indigo-400 rounded-xl font-bold text-xs uppercase tracking-widest border border-indigo-500/20 hover:bg-indigo-600 hover:text-white transition-all flex items-center gap-2"
-             >
-               <ExternalLink size={14} /> Ver Página de Vendas
-             </button>
-           )}
            <button 
             onClick={fetchData} 
             disabled={loading}
             className="px-6 py-3 bg-gray-900 rounded-xl font-bold text-xs uppercase tracking-widest border border-gray-800 hover:border-indigo-600 transition-all flex items-center gap-2"
            >
-             <RefreshCcw size={14} className={loading ? "animate-spin" : ""} /> Sincronizar Dados
+             <RefreshCcw size={14} className={loading ? "animate-spin" : ""} /> Sincronizar
            </button>
         </div>
       </header>
+
+      {/* Seção de Divulgação */}
+      <section className="bg-indigo-600/10 border border-indigo-500/20 p-8 rounded-[2.5rem] space-y-6">
+        <div className="flex items-center gap-3">
+          <Share2 className="text-indigo-400" size={20} />
+          <h2 className="text-lg font-black uppercase tracking-tighter italic">Canais de Venda & Divulgação</h2>
+        </div>
+        <div className="flex flex-col md:flex-row gap-4 items-center">
+          <div className="flex-1 w-full relative">
+            <input 
+              readOnly 
+              value={salesLink}
+              className="w-full bg-gray-950 border border-gray-800 rounded-2xl px-6 py-4 font-mono text-xs text-indigo-300 outline-none"
+            />
+          </div>
+          <div className="flex gap-2 w-full md:w-auto">
+            <button 
+              onClick={copySalesLink}
+              className="flex-1 md:flex-none px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/20"
+            >
+              {copiedLink ? <Check size={16} /> : <Copy size={16} />}
+              {copiedLink ? 'Link Copiado!' : 'Copiar para Hotmart'}
+            </button>
+            {onNavigate && (
+              <button 
+                onClick={() => onNavigate('sales')}
+                className="p-4 bg-gray-900 text-gray-400 rounded-2xl border border-gray-800 hover:text-white transition-all"
+                title="Visualizar Página"
+              >
+                <ExternalLink size={20} />
+              </button>
+            )}
+          </div>
+        </div>
+        <p className="text-[9px] text-indigo-400/60 font-bold uppercase tracking-[0.2em]">DICA: Use este link acima para suas campanhas de tráfego pago e no botão de vendas da Hotmart.</p>
+      </section>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-gray-900 p-8 rounded-[2rem] border border-gray-800 flex items-center gap-6 shadow-xl">
@@ -175,12 +211,6 @@ const SuperAdmin: React.FC<SuperAdminProps> = ({ onNavigate }) => {
             </div>
           </div>
         ))}
-        {filteredUsers.length === 0 && (
-          <div className="col-span-full py-20 text-center bg-gray-900/30 rounded-[3rem] border-2 border-dashed border-gray-800">
-             <Search size={40} className="mx-auto text-gray-700 mb-4" />
-             <p className="text-gray-500 font-black uppercase tracking-widest text-xs italic">A torre não detectou este usuário.</p>
-          </div>
-        )}
       </div>
     </div>
   );

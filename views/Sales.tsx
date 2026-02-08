@@ -35,7 +35,7 @@ const Sales: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
           <span className="text-indigo-600">CONTRATE A IA.</span>
         </h1>
         <p className="text-xl md:text-2xl text-gray-400 font-medium leading-relaxed max-w-2xl mx-auto">
-          Transforme fotos amadoras de celular em anúncios de revista em <span className="text-gray-950 font-black">3 segundos</span>. Economize mais de <span className="text-emerald-500 font-black">R$ 18.000,00</span> por ano em Social Media.
+          Transforme fotos amadoras de celular em anúncios de revista em <span className="text-gray-950 font-black">3 segundos</span>. Economize mais de <span className="text-emerald-500 font-black">R$ 25.000,00</span> por ano em Social Media.
         </p>
         <div className="pt-8">
           <button 
@@ -59,7 +59,7 @@ const Sales: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
             <h3 className="text-2xl font-black text-gray-400 uppercase italic">O Jeito Antigo</h3>
             <ul className="space-y-4">
               {[
-                "Pagar R$ 1.500+/mês para uma agência",
+                "Pagar R$ 2.500+/mês para uma agência",
                 "Esperar 5 dias para uma arte ficar pronta",
                 "Briefings infinitos e refações chatas",
                 "Depender da agenda de terceiros",
